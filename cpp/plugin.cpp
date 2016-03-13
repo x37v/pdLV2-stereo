@@ -53,10 +53,7 @@ class XNORLv2Plugin :
             mAudioOut.push_back(i);
             break;
           case xnor::CONTROL_IN:
-            mControlIn[i] = info.name;
-            break;
           case xnor::CONTROL_OUT:
-            mControlOut[i] = info.name;
             break;
         }
       }
@@ -76,7 +73,20 @@ class XNORLv2Plugin :
       mPDDollarZero = libpd_getdollarzero(fileHandle); // get dollarzero from patch
       mPDBlockSize = libpd_blocksize();
 
-      cout << "mPDDollarZero: " << mPDDollarZero << endl;
+      for (size_t i = 0; i < xnor::ports.size(); i++) {
+        xnor::PortInfo info = xnor::ports.at(i);
+        switch (info.type) {
+          case xnor::AUDIO_IN:
+          case xnor::AUDIO_OUT:
+            break;
+          case xnor::CONTROL_IN:
+            mControlIn[i] = std::to_string(mPDDollarZero) + "-" + info.name;
+            break;
+          case xnor::CONTROL_OUT:
+            mControlOut[i] = std::to_string(mPDDollarZero) + "-" + info.name;
+            break;
+        }
+      }
 
       mPDInputBuffer.resize(mPDBlockSize * mAudioIn.size());
       mPDOutputBuffer.resize(mPDBlockSize * mAudioOut.size());
@@ -87,11 +97,8 @@ class XNORLv2Plugin :
     }
 
     void run(uint32_t nframes) {
-
-      const std::string dollarzeroSwitch = std::to_string(mPDDollarZero) + "-switch";
       for (auto& kv: mControlIn) {
-        //XXX can optimize this
-        std::string ctrl_name = std::to_string(mPDDollarZero) + "-" + kv.second;
+        std::string ctrl_name = kv.second;
         float value = *p(kv.first);
         libpd_float(ctrl_name.c_str(), value);
       }
