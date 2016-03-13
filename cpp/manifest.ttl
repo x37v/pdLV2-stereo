@@ -3,4 +3,4 @@
 
 <http://xnor.info/lv2/stereopanner>
   a lv2:Plugin;
-  rdfs:seeAlso <detail.ttl>.
+  rdfs:seeAlso <details.ttl>.

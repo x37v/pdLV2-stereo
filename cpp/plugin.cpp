@@ -3,6 +3,8 @@
 #include <libpd/z_libpd.h>
 
 using namespace LV2;
+using std::cout;
+using std::endl;
 
 namespace xnor {
   enum port_type_t {
@@ -21,14 +23,14 @@ namespace xnor {
   };
 
   void pdprint(const char *s) {
-    std::cout << s << std::endl;
+    cout << s << endl;
   }
 
-  const char * patch_file_name = "stereopanner.pd";
+  const char * patch_file_name = "patch.pd";
 
   const std::vector<PortInfo> ports = {
     {CONTROL_IN, "width"},
-    {CONTROL_OUT, "balance"},
+    {CONTROL_IN, "balance"},
     {AUDIO_IN, "left_input"},
     {AUDIO_IN, "right_input"},
     {AUDIO_OUT, "left_output"},
@@ -36,17 +38,19 @@ namespace xnor {
   };
 }
 
-class XNORLv2Plugin : public Plugin<XNORLv2Plugin> {
+class XNORLv2Plugin :
+  public Plugin<XNORLv2Plugin>
+{
   public:
     XNORLv2Plugin(double rate) : Plugin<XNORLv2Plugin>(xnor::ports.size()) {
       for (size_t i = 0; i < xnor::ports.size(); i++) {
         xnor::PortInfo info = xnor::ports.at(i);
         switch (info.type) {
           case xnor::AUDIO_IN:
-            mAudioIn[i] = info.name;
+            mAudioIn.push_back(i);
             break;
           case xnor::AUDIO_OUT:
-            mAudioOut[i] = info.name;
+            mAudioOut.push_back(i);
             break;
           case xnor::CONTROL_IN:
             mControlIn[i] = info.name;
@@ -66,9 +70,13 @@ class XNORLv2Plugin : public Plugin<XNORLv2Plugin> {
     }
 
     void activate() {
-      void *fileHandle = libpd_openfile(xnor::patch_file_name, bundle_path()); // open patch   [; pd open file folder(
+      cout << "bundle path: " << bundle_path() << endl;
+      std::string directory = "/home/alex/.lv2/lv2x37v-xnor.lv2/";//XXX should just be bundle_path()
+      void *fileHandle = libpd_openfile(xnor::patch_file_name, directory.c_str()); // open patch   [; pd open file folder(
       mPDDollarZero = libpd_getdollarzero(fileHandle); // get dollarzero from patch
       mPDBlockSize = libpd_blocksize();
+
+      cout << "mPDDollarZero: " << mPDDollarZero << endl;
 
       mPDInputBuffer.resize(mPDBlockSize * mAudioIn.size());
       mPDOutputBuffer.resize(mPDBlockSize * mAudioOut.size());
@@ -79,6 +87,8 @@ class XNORLv2Plugin : public Plugin<XNORLv2Plugin> {
     }
 
     void run(uint32_t nframes) {
+
+      const std::string dollarzeroSwitch = std::to_string(mPDDollarZero) + "-switch";
       for (auto& kv: mControlIn) {
         //XXX can optimize this
         std::string ctrl_name = std::to_string(mPDDollarZero) + "-" + kv.second;
@@ -88,14 +98,26 @@ class XNORLv2Plugin : public Plugin<XNORLv2Plugin> {
       
       //XXX need to juggle between lv2 frames and pd blocks becuase libpd_process_raw expects nchannels * block_size length arrays
 
-      for (uint32_t i = 0; i < nframes; ++i)
-        p(0)[i] = 0;
+      //XXX pd block size has to be an equal divisor of nframes
+      float * in_buf = &mPDInputBuffer.front();
+      float * out_buf = &mPDOutputBuffer.front();
+      for (uint32_t i = 0; i < nframes; i += mPDBlockSize) {
+        for (uint32_t c = 0; c < mAudioIn.size(); c++)
+          memcpy(in_buf + c * mPDBlockSize, p(mAudioIn[c]) + i, mPDBlockSize * sizeof(float));
+
+        memset(out_buf, 0, mPDOutputBuffer.size() * sizeof(float));
+
+        libpd_process_raw(in_buf, out_buf);
+
+        for (uint32_t c = 0; c < mAudioOut.size(); c++)
+          memcpy(p(mAudioOut[c]) + i, out_buf + c * mPDBlockSize, mPDBlockSize * sizeof(float));
+      }
     }
   private:
     std::map<uint32_t, std::string> mControlIn;
     std::map<uint32_t, std::string> mControlOut;
-    std::map<uint32_t, std::string> mAudioIn;
-    std::map<uint32_t, std::string> mAudioOut;
+    std::vector<uint32_t> mAudioIn;
+    std::vector<uint32_t> mAudioOut;
     uint32_t mPDDollarZero = 0;
     size_t mPDBlockSize = 64;
     std::vector<float> mPDInputBuffer;

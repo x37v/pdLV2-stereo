@@ -3,7 +3,7 @@
 
 <http://xnor.info/lv2/stereopanner>
   a lv2:Plugin;
-  lv2:binary <stereopanner.so>;
+  lv2:binary <xnor.so>;
   doap:name "Stereo Panner";
   doap:license <http://usefulinc.com/doap/licenses/gpl>;
 
