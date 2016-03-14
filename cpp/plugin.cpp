@@ -64,12 +64,8 @@ class XNORLv2Plugin :
         libpd_init_audio(mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
         libpd_bind("libpdIsRunning");
       }
-    }
 
-    void activate() {
-      cout << "bundle path: " << bundle_path() << endl;
-      std::string directory = "/home/alex/.lv2/lv2x37v-xnor.lv2/";//XXX should just be bundle_path()
-      void *fileHandle = libpd_openfile(xnor::patch_file_name, directory.c_str()); // open patch   [; pd open file folder(
+      void *fileHandle = libpd_openfile(xnor::patch_file_name, bundle_path()); // open patch   [; pd open file folder(
       mPDDollarZero = libpd_getdollarzero(fileHandle); // get dollarzero from patch
       mPDBlockSize = libpd_blocksize();
 
@@ -87,7 +83,9 @@ class XNORLv2Plugin :
             break;
         }
       }
+    }
 
+    void activate() {
       mPDInputBuffer.resize(mPDBlockSize * mAudioIn.size());
       mPDOutputBuffer.resize(mPDBlockSize * mAudioOut.size());
 
