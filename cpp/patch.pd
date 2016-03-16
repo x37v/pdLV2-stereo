@@ -6,13 +6,14 @@
 #X obj 325 30 r \$0-lv2-width label:Width range: 0 0.5 1;
 #X obj 29 80 dac~ 1 2;
 #X obj 29 41 adc~ 1 2 3;
-#X msg 612 8 pluginURI: http://x37v.info/myplugin.html;
-#X msg 612 32 pluginName: My Plugin;
 #X obj 325 101 receive \$0-lv2-balance label:Balance;
 #X obj 459 299 s \$0-lv2-outtest label:Test range: 0 0.25 100;
+#X text 640 122 dac~ 4 5 6 test to try to mess up the parser;
+#X text 897 12 pluginURI: http://x37v.info/myplugin2.html;
+#X text 898 29 pluginName: My Plugin;
 #X connect 2 0 0 0;
 #X connect 3 0 1 0;
 #X connect 4 0 2 0;
 #X connect 6 0 5 0;
 #X connect 6 1 5 1;
-#X connect 9 0 3 0;
+#X connect 7 0 3 0;

@@ -1,8 +1,9 @@
 require 'rdf'
 require 'linkeddata'
 
-@controlInRegex = /r(?:eceive){0,1}\s*\\\$0-lv2-(.*);\s*/
-@controlOutRegex = /s(?:end){0,1}\s*\\\$0-lv2-(.*);\s*/
+@objRegex = /#X obj \d+ \d+ /
+@controlInRegex = /#{@objRegex}r(?:eceive){0,1}\s*\\\$0-lv2-(.*);\s*/
+@controlOutRegex = /#{@objRegex}s(?:end){0,1}\s*\\\$0-lv2-(.*);\s*/
 @controlLabelRegex = /label:\s*(\w*)/
 @floatRegex = /\d+(?:\.\d+)?/
 @rangeRegex = /range:\s+(#{@floatRegex})\s*(#{@floatRegex})\s*(#{@floatRegex})/
@@ -38,11 +39,11 @@ def parse_pd_file(patch_path)
 
   File.open(patch_path) do |f|
     f.readlines.each do |l|
-      if l =~ /dac~\s(.*);\s*/
+      if l =~ /#{@objRegex}dac~\s(.*);\s*/
         $1.scan(/\d+/).each do |d|
           output = d.to_i if d.to_i > output
         end
-      elsif l =~ /adc~\s(.*);\s*/
+      elsif l =~ /#{@objRegex}adc~\s(.*);\s*/
         $1.scan(/\d+/).each do |d|
           input = d.to_i if d.to_i > input
         end
@@ -50,9 +51,9 @@ def parse_pd_file(patch_path)
         in_controls << get_control_data($1)
       elsif l =~ @controlOutRegex
         out_controls << get_control_data($1)
-      elsif l =~ /pluginURI:\s(.*);\s*/
+      elsif l =~ /\spluginURI:\s(.*);\s*/
         uri = $1
-      elsif l =~ /pluginName:\s(.*);\s*/
+      elsif l =~ /\spluginName:\s(.*);\s*/
         name = $1
       end
     end
