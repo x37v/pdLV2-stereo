@@ -2,6 +2,7 @@ require 'rdf'
 require 'linkeddata'
 
 @objRegex = /#X obj \d+ \d+ /
+@msgRegex = /#X msg \d+ \d+ /
 @controlInRegex = /#{@objRegex}r(?:eceive){0,1}\s*\\\$0-lv2-(.*);\s*/
 @controlOutRegex = /#{@objRegex}s(?:end){0,1}\s*\\\$0-lv2-(.*);\s*/
 @controlLabelRegex = /label:\s*(\w*)/
@@ -51,9 +52,9 @@ def parse_pd_file(patch_path)
         in_controls << get_control_data($1)
       elsif l =~ @controlOutRegex
         out_controls << get_control_data($1)
-      elsif l =~ /\spluginURI:\s(.*);\s*/
+      elsif l =~ /#{@msgRegex}pluginURI:\s(.*);\s*/
         uri = $1
-      elsif l =~ /\spluginName:\s(.*);\s*/
+      elsif l =~ /#{@msgRegex}pluginName:\s(.*);\s*/
         name = $1
       end
     end

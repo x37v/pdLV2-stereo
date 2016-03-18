@@ -9,8 +9,11 @@
 #X obj 325 101 receive \$0-lv2-balance label:Balance;
 #X obj 459 299 s \$0-lv2-outtest label:Test range: 0 0.25 100;
 #X text 640 122 dac~ 4 5 6 test to try to mess up the parser;
-#X text 897 12 pluginURI: http://x37v.info/myplugin2.html;
-#X text 898 29 pluginName: My Plugin;
+#X msg 919 74 pluginURI: http://x37v.info/testplugin.html;
+#X msg 920 98 pluginName: Template Plugin;
+#X text 653 2 make a message with pluginURI: http://x37v.info/myplugin2.html
+, f 76;
+#X text 653 18 make a message with: pluginName: My Plugin;
 #X connect 2 0 0 0;
 #X connect 3 0 1 0;
 #X connect 4 0 2 0;
