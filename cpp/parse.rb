@@ -23,13 +23,6 @@ def get_control_data(content)
   return data
 end
 
-def print_control(data)
-  r = data[:range]
-  puts "\t#{data[:symbol]}"
-  puts "\t\tlabel: #{data[:label]}" if data[:label]
-  puts "\t\trange: #{r.join(', ')}" if r
-end
-
 def parse_pd_file(patch_path)
   input = 0
   output = 0
@@ -63,28 +56,49 @@ def parse_pd_file(patch_path)
     raise "need name" unless name
     raise "need at least one control or audio input or output" unless input + output + in_controls.size + out_controls.size > 0
 
+    outdata = {
+      :name => name,
+      :uri => uri
+    }
 
-    puts "name: #{name}"
-    puts "uri: #{uri}"
-    puts "audio inputs: #{input}"
-    puts "audio outputs: #{output}"
-    if in_controls.size
-      puts "control inputs:"
-      in_controls.each do |c|
-        print_control(c)
-      end
+    outdata[:audio_in] = input
+    outdata[:audio_out] = output
+    outdata[:control_in] = in_controls if in_controls.size
+    outdata[:control_out] = out_controls if out_controls.size
+    return outdata
+  end
+end
+
+def print_control(data)
+  r = data[:range]
+  puts "\t#{data[:symbol]}"
+  puts "\t\tlabel: #{data[:label]}" if data[:label]
+  puts "\t\trange: #{r.join(', ')}" if r
+end
+
+def print_plugin(data)
+  puts "name: #{data[:name]}"
+  puts "uri: #{data[:uri]}"
+  puts "audio inputs: #{data[:audio_in]}"
+  puts "audio outputs: #{data[:audio_out]}"
+
+  if data[:control_in].size
+    puts "control inputs:"
+    data[:control_in].each do |c|
+      print_control(c)
     end
-    if out_controls.size
-      puts "control outputs:"
-      out_controls.each do |c|
-        print_control(c)
-      end
+  end
+
+  if data[:control_out].size
+    puts "control outputs:"
+    data[:control_out].each do |c|
+      print_control(c)
     end
   end
 end
 
-
 plugins = ["patch.pd"]
 plugins.each do |p|
-  parse_pd_file(p)
+  data = parse_pd_file(p)
+  print_plugin(data)
 end
