@@ -1,6 +1,8 @@
 require 'rdf'
 require 'linkeddata'
 
+DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
+
 @objRegex = /#X obj \d+ \d+ /
 @msgRegex = /#X msg \d+ \d+ /
 @controlInRegex = /#{@objRegex}r(?:eceive){0,1}\s*\\\$0-lv2-(.*);\s*/
@@ -30,9 +32,20 @@ def parse_pd_file(patch_path)
   uri = nil
   in_controls = []
   out_controls = []
+  license = DEFAULT_LICENSE
 
   File.open(patch_path) do |f|
+    lines = []
+    #unwrap wrapped lines
     f.readlines.each do |l|
+      #pd lines start with # unless they're a continuation
+      unless l =~ /\A#/ or lines.size == 0
+        l = lines.pop + l
+      end
+      lines << l.chomp
+    end
+
+    lines.each do |l|
       if l =~ /#{@objRegex}dac~\s(.*);\s*/
         $1.scan(/\d+/).each do |d|
           output = d.to_i if d.to_i > output
@@ -49,6 +62,8 @@ def parse_pd_file(patch_path)
         uri = $1
       elsif l =~ /#{@msgRegex}pluginName:\s(.*);\s*/
         name = $1
+      elsif l =~ /#{@msgRegex}pluginLicense:\s(.*);\s*/
+        license = $1
       end
     end
 
@@ -58,7 +73,8 @@ def parse_pd_file(patch_path)
 
     outdata = {
       :name => name,
-      :uri => uri
+      :uri => uri,
+      :license => license
     }
 
     outdata[:audio_in] = input
@@ -79,6 +95,7 @@ end
 def print_plugin(data)
   puts "name: #{data[:name]}"
   puts "uri: #{data[:uri]}"
+  puts "license: #{data[:license]}"
   puts "audio inputs: #{data[:audio_in]}"
   puts "audio outputs: #{data[:audio_out]}"
 
