@@ -3,6 +3,7 @@
 require 'rdf'
 require 'rdf/ntriples'
 require 'linkeddata'
+require 'fileutils'
 
 DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
 
@@ -174,12 +175,19 @@ def write_rdf(data, path)
     end
   end
 
-  puts details.to_ttl
+  FileUtils.mkdir_p(path)
+  File.open(File.join(path, manifest_file), "w") do |f|
+    f.print manifest.to_ttl
+  end
+  File.open(File.join(path, details_file), "w") do |f|
+    f.print details.to_ttl
+  end
 end
 
 plugins = ["patch.pd"]
 plugins.each do |p|
   data = parse_pd_file(p)
   data[:binary] = "pdlv2.so"
-  write_rdf(data, "build")
+  path = File.join("build", data[:name].downcase.gsub(/\s+/, "_") + ".lv2")
+  write_rdf(data, path)
 end
