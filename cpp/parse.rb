@@ -1,4 +1,7 @@
+#!/usr/bin/env ruby
+
 require 'rdf'
+require 'rdf/ntriples'
 require 'linkeddata'
 
 DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
@@ -20,7 +23,7 @@ def get_control_data(content)
     end
   data[:range] = 
     if content =~ @rangeRegex
-      [$1, $2, $3]
+      [$1.to_f, $2.to_f, $3.to_f]
     end
   return data
 end
@@ -92,6 +95,25 @@ def print_control(data)
   puts "\t\trange: #{r.join(', ')}" if r
 end
 
+#audio in, out, control in, out
+def ports(data)
+  p = []
+  data[:audio_in].times do |i|
+    d = {:type => :audio, :dir => :in, :symbol => "audio_in_" + i.to_s, :label => "Audio Input #{i}"}
+  end
+  data[:audio_out].times do |i|
+    p << {:type => :audio, :dir => :out, :symbol => "audio_out_" + i.to_s, :label => "Audio Output #{i}"}
+  end
+  data[:control_in].each do |c|
+    p << c.merge({:type => :control, :dir => :in})
+  end
+  data[:control_out].each do |c|
+    p << c.merge({:type => :control, :dir => :out})
+  end
+
+  return p
+end
+
 def print_plugin(data)
   puts "name: #{data[:name]}"
   puts "uri: #{data[:uri]}"
@@ -114,8 +136,50 @@ def print_plugin(data)
   end
 end
 
+@lv2 = RDF::Vocabulary.new("http://lv2plug.in/ns/lv2core#")
+@doap = RDF::Vocabulary.new("http://usefulinc.com/ns/doap#")
+
+def write_rdf(data, path)
+  details_file = "details.ttl"
+  manifest_file = "manifest.ttl"
+
+  uri = RDF::URI.new(data[:uri])
+
+  manifest = RDF::Graph.new
+  manifest << [uri, RDF.type, @lv2.Plugin]
+  manifest << [uri, RDF::RDFS.seeAlso, RDF::URI.new(details_file)]
+
+  details = RDF::Graph.new
+  details << [uri, RDF.type, @lv2.Plugin]
+  details << [uri, @lv2.binary, RDF::URI.new(data[:binary])]
+  details << [uri, @doap.name, data[:name]]
+  details << [uri, @doap.license, RDF::URI.new(data[:license])]
+
+  ports(data).each_with_index do |p, i|
+    node = RDF::Node.new
+    details << [uri, @lv2.port, node]
+    details << [node, @lv2.index, i]
+    details << [node, RDF.type, @lv2.AudioPort] if p[:type] == :audio 
+    details << [node, RDF.type, @lv2.ControlPort] if p[:type] == :control 
+    details << [node, RDF.type, @lv2.InputPort] if p[:dir] == :in
+    details << [node, RDF.type, @lv2.OutputPort] if p[:dir] == :out
+
+    details << [node, @lv2.symbol, p[:symbol]]
+    details << [node, @lv2.name, p[:label]]
+
+    if p[:range]
+      details << [node, @lv2.minimum, p[:range][0]]
+      details << [node, @lv2.maximum, p[:range][2]]
+      details << [node, @lv2.default, p[:range][1]]
+    end
+  end
+
+  puts details.to_ttl
+end
+
 plugins = ["patch.pd"]
 plugins.each do |p|
   data = parse_pd_file(p)
-  print_plugin(data)
+  data[:binary] = "pdlv2.so"
+  write_rdf(data, "build")
 end
