@@ -1,3 +1,9 @@
+Requirements
+----
+* [Pure Data](http://msp.ucsd.edu/software.html) installed, can use package manager
+* [libpd](https://github.com/libpd/libpd) installed
+* [lv2-c++-tools](http://www.nongnu.org/ll-plugins/hacking.html) installed, can use package manager
+
 References
 ----
 
