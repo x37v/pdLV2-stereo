@@ -1,13 +1,15 @@
-pdLV2-stereo
+pdlv2
 ============
 
-makes simple Puredata (pd) patches useable as LV2 plugins utilizing libpd and lv2 libraries. Linux only at the moment.
+Makes simple Puredata (pd) patches useable as LV2 plugins utilizing libpd and lv2 libraries. Linux only at the moment.
+
+WORK IN PROGRESS, xnor fork
 
 
 features
 ========
-* stereo in and output
-* 5 control inputs
+* audio in and output
+* control inputs and outputs
 
 can be used to design simple audio effects or synthesizers which can be controlled by parameters (no midi yet).
 
