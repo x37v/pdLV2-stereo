@@ -184,7 +184,7 @@ def write_rdf(data, path)
   end
 end
 
-plugins = ["patch.pd"]
+plugins = ["plugins/template/plugin.pd"]
 plugins.each do |p|
   data = parse_pd_file(p)
   data[:binary] = "pdlv2.so"
