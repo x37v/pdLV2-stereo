@@ -2,83 +2,59 @@
 #include <iostream>
 #include <libpd/z_libpd.h>
 
+#include "plugin.h"
+
 using namespace LV2;
 using std::cout;
 using std::endl;
 
-namespace xnor {
-  enum port_type_t {
-    AUDIO_IN,
-    AUDIO_OUT,
-    CONTROL_IN,
-    CONTROL_OUT
-  };
-
-  struct PortInfo {
-    port_type_t type;
-    std::string name;
-    PortInfo(
-        port_type_t _type,
-        std::string _name) : type(_type), name(_name) {}
-  };
-
+namespace {
   void pdprint(const char *s) {
     cout << s << endl;
   }
-
-  const char * patch_file_name = "patch.pd";
-
-  const std::vector<PortInfo> ports = {
-    {CONTROL_IN, "width"},
-    {CONTROL_IN, "balance"},
-    {AUDIO_IN, "left_input"},
-    {AUDIO_IN, "right_input"},
-    {AUDIO_OUT, "left_output"},
-    {AUDIO_OUT, "right_output"},
-  };
 }
 
-class XNORLv2Plugin :
-  public Plugin<XNORLv2Plugin>
+class PDLv2Plugin :
+  public Plugin<PDLv2Plugin>
 {
   public:
-    XNORLv2Plugin(double rate) : Plugin<XNORLv2Plugin>(xnor::ports.size()) {
-      for (size_t i = 0; i < xnor::ports.size(); i++) {
-        xnor::PortInfo info = xnor::ports.at(i);
+    PDLv2Plugin(double rate) : Plugin<PDLv2Plugin>(pdlv2::ports.size()) {
+      for (size_t i = 0; i < pdlv2::ports.size(); i++) {
+        pdlv2::PortInfo info = pdlv2::ports.at(i);
         switch (info.type) {
-          case xnor::AUDIO_IN:
+          case pdlv2::AUDIO_IN:
             mAudioIn.push_back(i);
             break;
-          case xnor::AUDIO_OUT:
+          case pdlv2::AUDIO_OUT:
             mAudioOut.push_back(i);
             break;
-          case xnor::CONTROL_IN:
-          case xnor::CONTROL_OUT:
+          case pdlv2::CONTROL_IN:
+          case pdlv2::CONTROL_OUT:
             break;
         }
       }
 
       if (libpd_exists("libpdIsRunning") == 0) {
-        libpd_set_printhook((t_libpd_printhook) xnor::pdprint);
+        libpd_set_printhook((t_libpd_printhook) pdprint);
         libpd_init();
         libpd_init_audio(mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
         libpd_bind("libpdIsRunning");
       }
 
-      void *fileHandle = libpd_openfile(xnor::patch_file_name, bundle_path()); // open patch   [; pd open file folder(
+      void *fileHandle = libpd_openfile(pdlv2::patch_file_name, bundle_path()); // open patch   [; pd open file folder(
       mPDDollarZero = libpd_getdollarzero(fileHandle); // get dollarzero from patch
       mPDBlockSize = libpd_blocksize();
 
-      for (size_t i = 0; i < xnor::ports.size(); i++) {
-        xnor::PortInfo info = xnor::ports.at(i);
+      for (size_t i = 0; i < pdlv2::ports.size(); i++) {
+        pdlv2::PortInfo info = pdlv2::ports.at(i);
         switch (info.type) {
-          case xnor::AUDIO_IN:
-          case xnor::AUDIO_OUT:
+          case pdlv2::AUDIO_IN:
+          case pdlv2::AUDIO_OUT:
             break;
-          case xnor::CONTROL_IN:
+          case pdlv2::CONTROL_IN:
             mControlIn[i] = std::to_string(mPDDollarZero) + "-" + info.name;
             break;
-          case xnor::CONTROL_OUT:
+          case pdlv2::CONTROL_OUT:
             mControlOut[i] = std::to_string(mPDDollarZero) + "-" + info.name;
             break;
         }
@@ -130,4 +106,4 @@ class XNORLv2Plugin :
     size_t mPDBufferIndex = 0;
 };
 
-static int _ = XNORLv2Plugin::register_class("http://xnor.info/lv2/stereopanner");
+static int _ = PDLv2Plugin::register_class(pdlv2::plugin_uri);

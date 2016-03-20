@@ -184,10 +184,37 @@ def write_rdf(data, path)
   end
 end
 
+def write_header(data, path)
+  file_path = File.join(path, "plugin.h")
+  File.open(file_path, "w") do |f|
+    f.puts '#include "defines.h"'
+    f.puts "\n"
+    f.puts 'namespace pdlv2 {'
+    f.puts "  const char * plugin_uri = \"#{data[:uri]}\";"
+
+    f.puts '  const std::vector<pdlv2::PortInfo> ports = {';
+    ports(data).each do |p|
+      line = '{'
+      if p[:type] == :audio
+        line = line + (p[:dir] == :out ? "AUDIO_OUT" : "AUDIO_IN")
+      elsif p[:type] == :control
+        line = line + (p[:dir] == :out ? "CONTROL_OUT" : "CONTROL_IN")
+      else
+        raise "#{p[:type]} not supported"
+      end
+      line = line + ", \"#{p[:symbol]}\"},"
+      f.puts '    ' + line
+    end
+    f.puts '  };'
+    f.puts '}'
+  end
+end
+
 plugins = ["plugins/template/plugin.pd"]
 plugins.each do |p|
   data = parse_pd_file(p)
   data[:binary] = "pdlv2.so"
   path = File.join("build", data[:name].downcase.gsub(/\s+/, "_") + ".lv2")
   write_rdf(data, path)
+  write_header(data, path)
 end

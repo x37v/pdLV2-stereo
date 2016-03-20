@@ -1,6 +1,6 @@
 INSTALL_DIR = $(HOME)/.lv2/
 NAME = xnor
-BUNDLE = lv2x37v-$(NAME).lv2
+BUNDLE = build/lv2x37v-$(NAME).lv2
 
 CXXFLAGS = -Wl,--no-as-needed -lpd -shared -fPIC -DPIC plugin.cpp -std=c++11 `pkg-config --cflags --libs lv2-plugin`
 
