@@ -5,6 +5,12 @@ Makes simple [Pure Data (aka pd)](http://msp.ucsd.edu/software.html) patches usa
 
 Linux only at the moment.
 
+NOTE
+----
+
+Your lv2 host needs to provide processing blocks in multiples of pd's block size, which defaults to 64. 
+Hopefully we can relax this requirement in the future.
+
 
 Requirements
 ----
