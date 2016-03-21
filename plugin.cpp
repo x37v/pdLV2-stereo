@@ -52,10 +52,10 @@ class PDLv2Plugin :
           case pdlv2::AUDIO_OUT:
             break;
           case pdlv2::CONTROL_IN:
-            mControlIn[i] = std::to_string(mPDDollarZero) + "-" + info.name;
+            mControlIn[i] = std::to_string(mPDDollarZero) + "-lv2-" + info.name;
             break;
           case pdlv2::CONTROL_OUT:
-            mControlOut[i] = std::to_string(mPDDollarZero) + "-" + info.name;
+            mControlOut[i] = std::to_string(mPDDollarZero) + "-lv2-" + info.name;
             break;
         }
       }
