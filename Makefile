@@ -1,21 +1,22 @@
 INSTALL_DIR = $(HOME)/.lv2/
-NAME = xnor
-BUNDLE = build/lv2x37v-$(NAME).lv2
+NAME = template
+BUNDLE = $(NAME).lv2
+BUILD_DIR = build/$(BUNDLE)
 
-CXXFLAGS = -Wl,--no-as-needed -lpd -shared -fPIC -DPIC plugin.cpp -std=c++11 `pkg-config --cflags --libs lv2-plugin`
+CXXFLAGS = -Wl,--no-as-needed -lpd -shared -fPIC -DPIC -I. -std=c++11 `pkg-config --cflags --libs lv2-plugin`
 
-$(BUNDLE): manifest.ttl details.ttl patch.pd $(NAME).so
+$(BUILD_DIR): $(BUILD_DIR)/manifest.ttl $(BUILD_DIR)/details.ttl $(BUILD_DIR/plugin.pd $(BUILD_DIR)/pdlv2.so
 	rm -rf $(BUNDLE)
 	mkdir $(BUNDLE)
-	cp manifest.ttl details.ttl *.pd $(NAME).so $(BUNDLE)
+	cp plugins/$(NAME)/*.pd $(BUNDLE)
 
-$(NAME).so: plugin.cpp
-	g++ $(CXXFLAGS) -o $(NAME).so
+$(BUILD_DIR)/pdlv2.so: plugin.cpp
+	g++ $(CXXFLAGS) plugin.cpp -Ibuild/$(BUNDLE)/ -o $(BUILD_DIR)/pdlv2.so
 
-install: $(BUNDLE)
+install: $(BUILD_DIR)
 	mkdir -p $(INSTALL_DIR)
 	rm -rf $(INSTALL_DIR)/$(BUNDLE)
-	cp -R $(BUNDLE) $(INSTALL_DIR)
+	cp -R build/$(BUNDLE) $(INSTALL_DIR)
 
 clean:
 	rm -rf $(BUNDLE) *.so
