@@ -50,7 +50,7 @@ def parse_pd_file(patch_path)
     end
 
     lines.each do |l|
-      if l =~ /#{@objRegex}dac~\s?(.*);\s*/
+      if l =~ /#{@objRegex}dac~\s?(.*?);\s*/
         unless $1.size > 0 #default no args, 2 outputs
           output = 2 if 2 > output
         else
@@ -58,7 +58,7 @@ def parse_pd_file(patch_path)
             output = d.to_i if d.to_i > output
           end
         end
-      elsif l =~ /#{@objRegex}adc~\s?(.*);\s*/
+      elsif l =~ /#{@objRegex}adc~\s?(.*?);\s*/
         unless $1.size > 0 #default, no args, 2 inputs
           input = 2 if 2 > input
         else
@@ -108,7 +108,7 @@ end
 def ports(data)
   p = []
   data[:audio_in].times do |i|
-    d = {:type => :audio, :dir => :in, :symbol => "audio_in_" + i.to_s, :label => "Audio Input #{i}"}
+    p << {:type => :audio, :dir => :in, :symbol => "audio_in_" + i.to_s, :label => "Audio Input #{i}"}
   end
   data[:audio_out].times do |i|
     p << {:type => :audio, :dir => :out, :symbol => "audio_out_" + i.to_s, :label => "Audio Output #{i}"}
