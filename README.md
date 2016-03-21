@@ -62,7 +62,7 @@ References
 ----
 
 * [pdLV2-stereo](https://github.com/unknownError/pdLV2-stereo)
-  * a libpd-lv2 plugin wrapper by [Martin Schied](https://github.com/unknownError) that [xnor](http://x37v.info) rewrote to become the **pdlv2**
+  * a libpd-lv2 plugin wrapper by [Martin Schied](https://github.com/unknownError) that [xnor](http://x37v.info) worked from to become the **pdlv2**
   * some of the example plugins come from the **pdLV2-stereo** project, slightly altered to work with this project
 * Lars Luthman's [LV2 programming for the complete idiot](http://www.nongnu.org/ll-plugins/lv2pftci/)
   * the example I used to create the c++ plugin wrapper
