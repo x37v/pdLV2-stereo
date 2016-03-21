@@ -11,7 +11,7 @@ DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
 @msgRegex = /#X msg \d+ \d+ /
 @controlInRegex = /#{@objRegex}r(?:eceive){0,1}\s*\\\$0-lv2-(.*);\s*/
 @controlOutRegex = /#{@objRegex}s(?:end){0,1}\s*\\\$0-lv2-(.*);\s*/
-@controlLabelRegex = /label:\s*(\w*)/
+@controlLabelRegex = /label:\s*([\w-]*)/
 @floatRegex = /\d+(?:\.\d+)?/
 @rangeRegex = /range:\s+(#{@floatRegex})\s*(#{@floatRegex})\s*(#{@floatRegex})/
 
@@ -224,6 +224,7 @@ dest = ARGV[1]
 begin
   data = parse_pd_file(source)
   data[:binary] = "pdlv2.so"
+  print_plugin(data)
   write_rdf(data, dest)
   write_header(data, dest)
 rescue => e
