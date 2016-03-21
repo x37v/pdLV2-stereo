@@ -1,3 +1,9 @@
+/*
+ * based on work by:
+ * Martin Schied https://github.com/unknownError/pdLV2-stereo
+ * Lars Luthman http://www.nongnu.org/ll-plugins/lv2pftci/
+ */
+
 #include <lv2plugin.hpp>
 #include <iostream>
 #include <libpd/z_libpd.h>
@@ -87,7 +93,6 @@ class PDLv2Plugin :
           memcpy(in_buf + c * mPDBlockSize, p(mAudioIn[c]) + i, mPDBlockSize * sizeof(float));
 
         memset(out_buf, 0, mPDOutputBuffer.size() * sizeof(float));
-
         libpd_process_raw(in_buf, out_buf);
 
         for (uint32_t c = 0; c < mAudioOut.size(); c++)
