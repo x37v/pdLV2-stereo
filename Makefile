@@ -1,25 +1,20 @@
 INSTALL_DIR = $(HOME)/.lv2/
-NAME = template
-BUNDLE = $(NAME).lv2
-BUILD_DIR = build/$(BUNDLE)
+BUILD_DIR = build
+
+SOURCES = $(wildcard plugins/*)
+BUILD_DIRS = $(addprefix $(BUILD_DIR)/, $(notdir $(SOURCES)))
+HEADERS = $(addsuffix /plugin.h, $(BUILD_DIRS))
+PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
 CXXFLAGS = -Wl,--no-as-needed -lpd -shared -fPIC -DPIC -I. -std=c++11 `pkg-config --cflags --libs lv2-plugin`
 
-$(BUILD_DIR)/pdlv2.so: plugin.cpp $(BUILD_DIR)/plugin.h
-	g++ $(CXXFLAGS) plugin.cpp -Ibuild/$(BUNDLE)/ -o $(BUILD_DIR)/pdlv2.so
+$(BUILD_DIR)/%/pdlv2.so: $(BUILD_DIR)/%/plugin.h
+	g++ $(CXXFLAGS) plugin.cpp -I$(dir $<) -o $@
 
-$(BUILD_DIR): $(BUILD_DIR)/manifest.ttl $(BUILD_DIR)/details.ttl $(BUILD_DIR/plugin.pd $(BUILD_DIR)/pdlv2.so
-	rm -rf $(BUNDLE)
-	mkdir $(BUNDLE)
-	cp plugins/$(NAME)/*.pd $(BUNDLE)
+$(BUILD_DIR)/%/plugin.h: plugins/%/plugin.pd
+	ruby parse.rb $< $(dir $@)
 
-install: $(BUILD_DIR)
-	mkdir -p $(INSTALL_DIR)
-	rm -rf $(INSTALL_DIR)/$(BUNDLE)
-	cp -R build/$(BUNDLE) $(INSTALL_DIR)
+all: $(PLUGINS)
 
 clean:
 	rm -rf build
-
-test: install
-	jalv -p http://xnor.info/lv2/stereopanner

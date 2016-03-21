@@ -210,11 +210,15 @@ def write_header(data, path)
   end
 end
 
-plugins = ["plugins/template/plugin.pd"]
-plugins.each do |p|
-  data = parse_pd_file(p)
+source = ARGV[0]
+dest = ARGV[1]
+
+begin
+  data = parse_pd_file(source)
   data[:binary] = "pdlv2.so"
-  path = File.join("build", data[:name].downcase.gsub(/\s+/, "_") + ".lv2")
-  write_rdf(data, path)
-  write_header(data, path)
+  write_rdf(data, dest)
+  write_header(data, dest)
+rescue => e
+  puts "problem parsing #{source} #{dest}:\n\t#{e}"
+  exit -1
 end

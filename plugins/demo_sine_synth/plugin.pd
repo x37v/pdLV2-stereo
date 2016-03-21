@@ -1,10 +1,9 @@
-#N canvas 130 190 1200 854 10;
+#N canvas 1922 51 1916 1027 10;
 #X obj 59 372 adc~;
 #X obj 57 211 loadbang;
 #X obj 605 222 osc~ 440;
 #X obj 676 482 switch~;
 #X obj 676 456 r \$0-switch;
-#X obj 57 324 print \$0-freq;
 #X obj 604 314 *~;
 #X obj 604 186 +~;
 #X obj 655 122 osc~ 0.5;
@@ -22,21 +21,17 @@
 #X obj 619 247 r \$0-amp;
 #X obj 536 254 osc~ 440;
 #X obj 667 270 r \$0-smooth;
-#X floatatom 62 466 5 0 0 0 - - -;
-#X floatatom 66 523 5 0 0 0 - - -;
-#X floatatom 68 582 5 0 0 0 - - -;
-#X floatatom 67 634 5 0 0 0 - - -;
-#X floatatom 68 698 5 0 0 0 - - -;
+#X floatatom 62 466 5 0 0 0 - - -, f 5;
+#X floatatom 66 523 5 0 0 0 - - -, f 5;
+#X floatatom 68 582 5 0 0 0 - - -, f 5;
+#X floatatom 67 634 5 0 0 0 - - -, f 5;
+#X floatatom 68 698 5 0 0 0 - - -, f 5;
 #X obj 537 344 dac~;
 #X obj 105 546 s \$0-amp;
-#X floatatom 625 267 5 0 0 0 - - -;
-#X floatatom 721 152 5 0 0 0 - - -;
-#X floatatom 666 98 5 0 0 0 - - -;
-#X floatatom 513 98 5 0 0 0 - - -;
-#X obj 108 698 r \$0-control5 label:Vibrato-Depth range: 0 20 100;
-#X obj 108 635 r \$0-control4 label:Vibrato-Freq range: 0 20 100;
-#X obj 107 583 r \$0-control3 label:Smoothing range: 0.5 20 1000;
-#X obj 105 521 r \$0-control2 label:Amplitude range: 0 0.2 1;
+#X floatatom 625 267 5 0 0 0 - - -, f 5;
+#X floatatom 721 152 5 0 0 0 - - -, f 5;
+#X floatatom 666 98 5 0 0 0 - - -, f 5;
+#X floatatom 513 98 5 0 0 0 - - -, f 5;
 #X text 56 36 Each plugin needs an URI to identify it to the LV2 host.
 ;
 #X text 62 835 Better don't use the receives (\$0-control1 and so on)
@@ -67,7 +62,6 @@ host.;
 #X text 54 429 control inputs for your plugin are control1 to control5
 for now.;
 #X text 169 487 use your own send / receives inside the patch.;
-#X obj 104 465 r \$0-control1 label:Frequency range: 0 440 20000;
 #X text 63 750 If no arguments are given default names are given. Better
 give names. The Three arguments behind "range" are the allowed ranges
 for the control inputs (lower boundary \, default value \, upper boundary).
@@ -100,39 +94,49 @@ ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE \, DATA OR PROFITS
 ACTION \, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
 OF THIS SOFTWARE.;
 #X restore 510 596 pd license;
-#X connect 1 0 51 0;
-#X connect 2 0 6 0;
+#X obj 104 465 r \$0-lv2-control1 label:Frequency range: 0 440 20000
+;
+#X obj 105 521 r \$0-lv2-control2 label:Amplitude range: 0 0.2 1;
+#X obj 107 583 r \$0-lv2-control3 label:Smoothing range: 0.5 20 1000
+;
+#X obj 108 635 r \$0-lv2-control4 label:Vibrato-Freq range: 0 20 100
+;
+#X obj 108 698 r \$0-lv2-control5 label:Vibrato-Depth range: 0 20 100
+;
+#X obj 57 324 print;
+#X connect 1 0 46 0;
+#X connect 2 0 5 0;
 #X connect 4 0 3 0;
-#X connect 6 0 28 1;
-#X connect 7 0 2 0;
-#X connect 7 0 18 0;
-#X connect 8 0 10 0;
-#X connect 9 0 7 0;
-#X connect 10 0 7 1;
-#X connect 11 0 33 0;
-#X connect 16 0 8 0;
-#X connect 16 0 32 0;
-#X connect 17 0 10 1;
-#X connect 17 0 31 0;
-#X connect 18 0 21 0;
-#X connect 19 0 28 0;
-#X connect 20 0 30 0;
-#X connect 20 0 44 0;
-#X connect 21 0 19 0;
-#X connect 22 0 44 1;
-#X connect 23 0 12 0;
-#X connect 24 0 29 0;
+#X connect 5 0 27 1;
+#X connect 6 0 2 0;
+#X connect 6 0 17 0;
+#X connect 7 0 9 0;
+#X connect 8 0 6 0;
+#X connect 9 0 6 1;
+#X connect 10 0 32 0;
+#X connect 15 0 7 0;
+#X connect 15 0 31 0;
+#X connect 16 0 9 1;
+#X connect 16 0 30 0;
+#X connect 17 0 20 0;
+#X connect 18 0 27 0;
+#X connect 19 0 29 0;
+#X connect 19 0 39 0;
+#X connect 20 0 18 0;
+#X connect 21 0 39 1;
+#X connect 22 0 11 0;
+#X connect 23 0 28 0;
+#X connect 24 0 12 0;
 #X connect 25 0 13 0;
 #X connect 26 0 14 0;
-#X connect 27 0 15 0;
-#X connect 33 0 9 0;
-#X connect 34 0 15 0;
-#X connect 35 0 14 0;
-#X connect 36 0 13 0;
-#X connect 37 0 29 0;
-#X connect 41 0 9 1;
-#X connect 43 0 3 0;
-#X connect 44 0 6 1;
-#X connect 44 0 19 1;
-#X connect 51 0 5 0;
-#X connect 55 0 12 0;
+#X connect 32 0 8 0;
+#X connect 36 0 8 1;
+#X connect 38 0 3 0;
+#X connect 39 0 5 1;
+#X connect 39 0 18 1;
+#X connect 46 0 68 0;
+#X connect 63 0 11 0;
+#X connect 64 0 28 0;
+#X connect 65 0 12 0;
+#X connect 66 0 13 0;
+#X connect 67 0 14 0;
