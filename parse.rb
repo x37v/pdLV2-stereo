@@ -21,6 +21,8 @@ def get_control_data(content)
   data[:label] =
     if content =~ @controlLabelRegex
       $1
+    else
+      data[:symbol]
     end
   data[:range] = 
     if content =~ @rangeRegex
@@ -107,11 +109,21 @@ end
 #audio in, out, control in, out
 def ports(data)
   p = []
-  data[:audio_in].times do |i|
-    p << {:type => :audio, :dir => :in, :symbol => "audio_in_" + i.to_s, :label => "Audio Input #{i}"}
+  if data[:audio_in] == 2 #default naming
+      p << {:type => :audio, :dir => :in, :symbol => "audio_in_left", :label => "Audio Input Left"}
+      p << {:type => :audio, :dir => :in, :symbol => "audio_in_right", :label => "Audio Input Right"}
+  else
+    data[:audio_in].times do |i|
+      p << {:type => :audio, :dir => :in, :symbol => "audio_in_" + i.to_s, :label => "Audio Input #{i}"}
+    end
   end
-  data[:audio_out].times do |i|
-    p << {:type => :audio, :dir => :out, :symbol => "audio_out_" + i.to_s, :label => "Audio Output #{i}"}
+  if data[:audio_out] == 2 #default naming
+      p << {:type => :audio, :dir => :out, :symbol => "audio_out_left", :label => "Audio Output Left"}
+      p << {:type => :audio, :dir => :out, :symbol => "audio_out_right", :label => "Audio Output Right"}
+  else
+    data[:audio_out].times do |i|
+      p << {:type => :audio, :dir => :out, :symbol => "audio_out_" + i.to_s, :label => "Audio Output #{i}"}
+    end
   end
   data[:control_in].each do |c|
     p << c.merge({:type => :control, :dir => :in})
@@ -224,7 +236,6 @@ dest = ARGV[1]
 begin
   data = parse_pd_file(source)
   data[:binary] = "pdlv2.so"
-  print_plugin(data)
   write_rdf(data, dest)
   write_header(data, dest)
 rescue => e
