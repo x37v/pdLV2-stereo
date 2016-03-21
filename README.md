@@ -18,7 +18,8 @@ Install these:
 * [bundler](http://bundler.io/) gem or package manager
   * run: **bundle install** from the top project directory
 
-You'll also need the 
+You'll also need a c++ compiler and **make**
+* install **build-essential** on debian systems
 
 Workflow
 ----
