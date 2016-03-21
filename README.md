@@ -65,7 +65,7 @@ References
   * a libpd-lv2 plugin wrapper by [Martin Schied](https://github.com/unknownError) that [xnor](http://x37v.info) worked from to become the **pdlv2**
   * some of the example plugins come from the **pdLV2-stereo** project, slightly altered to work with this project
 * Lars Luthman's [LV2 programming for the complete idiot](http://www.nongnu.org/ll-plugins/lv2pftci/)
-  * the example I used to create the c++ plugin wrapper
+  * the example [xnor](http://x37v.info) referenced to create the c++ plugin wrapper
 * [RDF for Ruby](http://blog.datagraph.org/2010/03/rdf-for-ruby)
   * the library used to generate the rdf plugin specification
 * [doap rdf](https://github.com/edumbill/doap/) Documentation of a project
