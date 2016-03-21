@@ -16,7 +16,7 @@ CXXFLAGS = -Wall -shared -fPIC -DPIC -I. -std=c++11 `pkg-config --cflags lv2-plu
 all: $(PLUGINS)
 
 $(BUILD_DIR)/pdlv2-%.lv2/pdlv2.so: $(BUILD_DIR)/pdlv2-%.lv2/plugin.h
-	g++ $(CXXFLAGS) plugin.cpp -I$(dir $<) -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) plugin.cpp -I$(dir $<) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd
 	ruby parse.rb $< $(dir $@)
