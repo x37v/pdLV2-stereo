@@ -4,21 +4,22 @@
 #X obj 325 56 change;
 #X obj 325 126 change;
 #X obj 325 30 r \$0-lv2-width label:Width range: 0 0.5 1;
-#X obj 29 80 dac~ 1 2;
-#X obj 29 41 adc~ 1 2 3;
 #X obj 325 101 receive \$0-lv2-balance label:Balance;
 #X obj 459 299 s \$0-lv2-outtest label:Test range: 0 0.25 100;
-#X text 640 122 dac~ 4 5 6 test to try to mess up the parser;
-#X msg 919 74 pluginURI: http://x37v.info/testplugin.html;
-#X msg 920 98 pluginName: Template;
-#X text 653 2 make a message with pluginURI: http://x37v.info/myplugin2.html
+#X text 653 43 make a message with pluginURI: http://x37v.info/myplugin2.html
 , f 76;
-#X text 653 18 make a message with: pluginName: My Plugin;
-#X msg 920 118 pluginLicense: http://usefulinc.com/doap/licenses/mit
+#X text 653 59 make a message with: pluginName: My Plugin;
+#X msg 654 119 pluginLicense: http://usefulinc.com/doap/licenses/mit
 ;
+#X obj 29 41 adc~;
+#X obj 29 80 dac~;
+#X msg 654 99 pluginName: Template Plugin;
+#X msg 654 78 pluginURI: http://x37v.info/pdlv2/templateplugin.html
+;
+#X text 74 41 just passing through right now;
 #X connect 2 0 0 0;
 #X connect 3 0 1 0;
 #X connect 4 0 2 0;
-#X connect 6 0 5 0;
-#X connect 6 1 5 1;
-#X connect 7 0 3 0;
+#X connect 5 0 3 0;
+#X connect 10 0 11 0;
+#X connect 10 1 11 1;
