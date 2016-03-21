@@ -76,7 +76,7 @@ class PDLv2Plugin :
         float value = *p(kv.first);
         libpd_float(ctrl_name.c_str(), value);
       }
-      
+
       //XXX need to juggle between lv2 frames and pd blocks becuase libpd_process_raw expects nchannels * block_size length arrays
 
       //XXX pd block size has to be an equal divisor of nframes
@@ -103,7 +103,6 @@ class PDLv2Plugin :
     size_t mPDBlockSize = 64;
     std::vector<float> mPDInputBuffer;
     std::vector<float> mPDOutputBuffer;
-    size_t mPDBufferIndex = 0;
 };
 
 static int _ = PDLv2Plugin::register_class(pdlv2::plugin_uri);
