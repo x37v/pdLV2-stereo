@@ -50,13 +50,21 @@ def parse_pd_file(patch_path)
     end
 
     lines.each do |l|
-      if l =~ /#{@objRegex}dac~\s(.*);\s*/
-        $1.scan(/\d+/).each do |d|
-          output = d.to_i if d.to_i > output
+      if l =~ /#{@objRegex}dac~\s?(.*);\s*/
+        unless $1.size > 0 #default no args, 2 outputs
+          output = 2 if 2 > output
+        else
+          $1.scan(/\d+/).each do |d|
+            output = d.to_i if d.to_i > output
+          end
         end
-      elsif l =~ /#{@objRegex}adc~\s(.*);\s*/
-        $1.scan(/\d+/).each do |d|
-          input = d.to_i if d.to_i > input
+      elsif l =~ /#{@objRegex}adc~\s?(.*);\s*/
+        unless $1.size > 0 #default, no args, 2 inputs
+          input = 2 if 2 > input
+        else
+          $1.scan(/\d+/).each do |d|
+            input = d.to_i if d.to_i > input
+          end
         end
       elsif l =~ @controlInRegex
         in_controls << get_control_data($1)
