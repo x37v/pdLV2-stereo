@@ -1,9 +1,10 @@
 pdlv2
 ====
 
-Makes simple [Pure Data (aka pd)](http://msp.ucsd.edu/software.html) patches useable as [LV2 plugins](http://lv2plug.in/) utilizing [libpd](https://github.com/libpd/libpd) and [lv2-c++-tools](http://www.nongnu.org/ll-plugins/hacking.html)
+Makes simple [Pure Data (aka pd)](http://msp.ucsd.edu/software.html) patches usable as [LV2 plugins](http://lv2plug.in/) utilizing [libpd](https://github.com/libpd/libpd) and [lv2-c++-tools](http://www.nongnu.org/ll-plugins/hacking.html)
 
 Linux only at the moment.
+
 
 Requirements
 ----
@@ -20,6 +21,7 @@ Install these:
 
 You'll also need a c++ compiler and **make**
 * install **build-essential** on debian systems
+
 
 Workflow
 ----
@@ -49,13 +51,20 @@ Workflow
 * **make install**: to install into ~/.lv2/
   * you can modify this destination by editing *INSTALL_DIR* in the Makefile
 
+
 References
 ----
 
-* Lars Luthman's [LV2 programming for the complete idiot](http://www.nongnu.org/ll-plugins/lv2pftci/)
-* [RDF for Ruby](http://blog.datagraph.org/2010/03/rdf-for-ruby)
 * [pdLV2-stereo](https://github.com/unknownError/pdLV2-stereo)
+  * a libpd-lv2 plugin wrapper by [Martin Schied](https://github.com/unknownError) that [xnor](http://x37v.info) rewrote to become the **pdlv2**
+  * some of the example plugins come from the **pdLV2-stereo** project, slightly altered to work with this project
+* Lars Luthman's [LV2 programming for the complete idiot](http://www.nongnu.org/ll-plugins/lv2pftci/)
+  * the example I used to create the c++ plugin wrapper
+* [RDF for Ruby](http://blog.datagraph.org/2010/03/rdf-for-ruby)
+  * the library used to generate the rdf plugin specification
 * [doap rdf](https://github.com/edumbill/doap/) Documentation of a project
+* [LV2 plugins](http://lv2plug.in/)
+
 
 TODO
 ----
