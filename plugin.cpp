@@ -15,13 +15,19 @@
 using namespace LV2;
 using std::cout;
 using std::endl;
+namespace sp = std::placeholders;
 
+class PDLv2Plugin;
 namespace {
+  PDLv2Plugin * current_plugin = nullptr;
+
   std::atomic_flag pd_global_lock = ATOMIC_FLAG_INIT;
 
   void pdprint(const char *s) {
     cout << s;
   }
+
+  void pd_floathook(const char *s, float value);
 
   void with_lock(std::function<void()> func) {
     while (pd_global_lock.test_and_set(std::memory_order_acquire));  // spin, acquire lock
@@ -41,6 +47,9 @@ namespace {
 class PDLv2Plugin :
   public Plugin<PDLv2Plugin>
 {
+  private:
+    void float_message_callback(const char *source, float value) {
+    }
   public:
     PDLv2Plugin(double rate) : Plugin<PDLv2Plugin>(pdlv2::ports.size()) {
       for (size_t i = 0; i < pdlv2::ports.size(); i++) {
@@ -65,32 +74,43 @@ class PDLv2Plugin :
         libpd_set_printhook((t_libpd_printhook) pdprint);
         libpd_init();
         libpd_init_audio(mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
-      });
+        libpd_set_floathook(&pd_floathook);
 
-      void *fileHandle = libpd_openfile(pdlv2::patch_file_name, bundle_path()); // open patch   [; pd open file folder(
-      mPDDollarZero = libpd_getdollarzero(fileHandle); // get dollarzero from patch
-      mPDBlockSize = libpd_blocksize();
+        void *fileHandle = libpd_openfile(pdlv2::patch_file_name, bundle_path()); // open patch   [; pd open file folder(
+        mPDDollarZero = libpd_getdollarzero(fileHandle); // get dollarzero from patch
+        mPDBlockSize = libpd_blocksize();
 
-      for (size_t i = 0; i < pdlv2::ports.size(); i++) {
-        pdlv2::PortInfo info = pdlv2::ports.at(i);
-        switch (info.type) {
-          case pdlv2::AUDIO_IN:
-          case pdlv2::AUDIO_OUT:
-            break;
-          case pdlv2::CONTROL_IN:
-            mControlIn[i] = std::to_string(mPDDollarZero) + "-lv2-" + info.name;
-            break;
-          case pdlv2::CONTROL_OUT:
-            mControlOut[i] = std::to_string(mPDDollarZero) + "-lv2-" + info.name;
-            break;
+        for (size_t i = 0; i < pdlv2::ports.size(); i++) {
+          pdlv2::PortInfo info = pdlv2::ports.at(i);
+          switch (info.type) {
+            case pdlv2::AUDIO_IN:
+            case pdlv2::AUDIO_OUT:
+              break;
+            case pdlv2::CONTROL_IN:
+              mControlIn[i] = std::to_string(mPDDollarZero) + "-lv2-" + info.name;
+              break;
+            case pdlv2::CONTROL_OUT:
+              mControlOut[i] = std::to_string(mPDDollarZero) + "-lv2-" + info.name;
+              libpd_bind(mControlOut[i].c_str());
+              break;
+          }
         }
-      }
+      });
     }
 
     virtual ~PDLv2Plugin() {
       with_lock([this]() {
         pdinstance_free(mPDInstance);
       });
+    }
+
+    void process_float(std::string prefix, float value) {
+      for (auto& kv: mControlOut) {
+        if (prefix == kv.second) {
+          *p(kv.first) = value;
+          break;
+        }
+      }
     }
 
     void activate() {
@@ -106,6 +126,8 @@ class PDLv2Plugin :
 
     void run(uint32_t nframes) {
       with_instance(mPDInstance, [this, nframes]() {
+        current_plugin = this; //for floathook
+
         for (auto& kv: mControlIn) {
           std::string ctrl_name = kv.second;
           float value = *p(kv.first);
@@ -129,7 +151,7 @@ class PDLv2Plugin :
         }
       });
     }
-  private:
+
     std::map<uint32_t, std::string> mControlIn;
     std::map<uint32_t, std::string> mControlOut;
     std::vector<uint32_t> mAudioIn;
@@ -140,5 +162,12 @@ class PDLv2Plugin :
     std::vector<float> mPDOutputBuffer;
     t_pdinstance * mPDInstance;
 };
+
+namespace {
+  void pd_floathook(const char *s, float value) {
+    if (current_plugin)
+      current_plugin->process_float(std::string(s), value);
+  }
+}
 
 static int _ = PDLv2Plugin::register_class(pdlv2::plugin_uri);
