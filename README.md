@@ -8,6 +8,8 @@ Linux only at the moment.
 NOTE
 ----
 
+THIS IS A WORK IN PROGRESS, YOU CANNOT CURRENTLY RUN INSTANCES OF DIFFERENT PDLV2 WRAPPED PLUGINS IN THE SAME HOST.
+
 Your lv2 host needs to provide processing blocks in multiples of pd's block size, which defaults to 64. 
 Hopefully we can relax this requirement in the future.
 
