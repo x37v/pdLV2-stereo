@@ -96,6 +96,9 @@ class PDLv2Plugin :
           }
         }
       });
+
+      mPDInputBuffer.resize(mPDBlockSize * mAudioIn.size());
+      mPDOutputBuffer.resize(mPDBlockSize * mAudioOut.size());
     }
 
     virtual ~PDLv2Plugin() {
@@ -114,9 +117,6 @@ class PDLv2Plugin :
     }
 
     void activate() {
-      mPDInputBuffer.resize(mPDBlockSize * mAudioIn.size());
-      mPDOutputBuffer.resize(mPDBlockSize * mAudioOut.size());
-
       with_instance(mPDInstance, [this]() {
         libpd_start_message(1);  // begin of message
         libpd_add_float(1.0f);  // message contains now "1"
@@ -134,7 +134,7 @@ class PDLv2Plugin :
           libpd_float(ctrl_name.c_str(), value);
         }
 
-        //XXX need to juggle between lv2 frames and pd blocks becuase libpd_process_raw expects nchannels * block_size length arrays
+        //XXX need to juggle between lv2 frames and pd blocks because libpd_process_raw expects nchannels * block_size length arrays
 
         //XXX pd block size has to be an equal divisor of nframes
         float * in_buf = &mPDInputBuffer.front();
