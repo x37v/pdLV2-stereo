@@ -10,6 +10,10 @@ NOTE
 
 THIS IS A WORK IN PROGRESS, YOU CANNOT CURRENTLY RUN INSTANCES OF DIFFERENT PDLV2 WRAPPED PLUGINS IN THE SAME HOST.
 
+Try multiple intances of libpd as a shared object?:
+* http://stackoverflow.com/questions/1716472/using-libtool-to-load-a-duplicate-function-name-from-a-shared-library
+* http://stackoverflow.com/questions/1745975/load-multiple-copies-of-a-shared-library
+
 Your lv2 host needs to provide processing blocks in multiples of pd's block size, which defaults to 64. 
 Hopefully we can relax this requirement in the future.
 
