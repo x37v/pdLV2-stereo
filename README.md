@@ -39,15 +39,15 @@ Workflow
     * | **pluginLicense**: *http://rdf-uri/to/your/license/* (
       * defaults to 'http://usefulinc.com/doap/licenses/gpl'
   * specify control inputs with **receive** objects
-    * format: | **receive** *$0-lv2-control_symbol_name* **label:** *Control-Label* **range:** *0 0.5 1* (
-    * you can use the short form: | **r** _$0-lv2-control_symbol_name_ (
+    * format: [ **receive** *$0-lv2-control_symbol_name* **label:** *Control-Label* **range:** *0 0.5 1* ]
+    * you can use the short form: [ **r** _$0-lv2-control_symbol_name_ ]
     * the symbol must be *$0-lv2-* followed by a valid c-identifier which defines the symbol that is used to identify the port
       * for example, *$0-lv2-balance* defines a port named *balance*
     * label cannot contain whitespace at this time
     * range specified by floats in the order: *minimum* *default* *maximum*
   * specify control outputs with **send** objects
     * the format is the same as the **receive** except it uses a **send** object
-    * you can use the short form: | **s** _$0-lv2-control_symbol_name_ (
+    * you can use the short form: [ **s** _$0-lv2-control_symbol_name_ ]
   * specify any audio inputs or outputs you want
     * inputs use **adc~**
       * example: 4 inputs would be [ *adc~ 1 2 3 4* ]
