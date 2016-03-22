@@ -149,6 +149,7 @@ class PDLv2Plugin :
           for (uint32_t c = 0; c < mAudioOut.size(); c++)
             memcpy(p(mAudioOut[c]) + i, out_buf + c * mPDBlockSize, mPDBlockSize * sizeof(float));
         }
+        current_plugin = nullptr;
       });
     }
 
