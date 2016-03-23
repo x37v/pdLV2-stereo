@@ -214,34 +214,36 @@ class PDLv2Plugin :
     }
 
     void run(uint32_t nframes) {
-      current_plugin = this; //for floathook
+      with_lock([this, nframes] () {
+        current_plugin = this; //for floathook
         const std::string patch_switch = std::to_string(mPDDollarZero) + "-lv2-switch";
         call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", patch_switch.c_str(), 1.0f);
 
-      for (auto& kv: mControlIn) {
-        std::string ctrl_name = kv.second;
-        float value = *p(kv.first);
-        call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", ctrl_name.c_str(), value);
-      }
+        for (auto& kv: mControlIn) {
+          std::string ctrl_name = kv.second;
+          float value = *p(kv.first);
+          call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", ctrl_name.c_str(), value);
+        }
 
-      //XXX need to juggle between lv2 frames and pd blocks because libpd_process_raw expects nchannels * block_size length arrays
+        //XXX need to juggle between lv2 frames and pd blocks because libpd_process_raw expects nchannels * block_size length arrays
 
-      //XXX pd block size has to be an equal divisor of nframes
-      float * in_buf = &mPDInputBuffer.front();
-      float * out_buf = &mPDOutputBuffer.front();
-      for (uint32_t i = 0; i < nframes; i += mPDBlockSize) {
-        for (uint32_t c = 0; c < mAudioIn.size(); c++)
-          memcpy(in_buf + c * mPDBlockSize, p(mAudioIn[c]) + i, mPDBlockSize * sizeof(float));
+        //XXX pd block size has to be an equal divisor of nframes
+        float * in_buf = &mPDInputBuffer.front();
+        float * out_buf = &mPDOutputBuffer.front();
+        for (uint32_t i = 0; i < nframes; i += mPDBlockSize) {
+          for (uint32_t c = 0; c < mAudioIn.size(); c++)
+            memcpy(in_buf + c * mPDBlockSize, p(mAudioIn[c]) + i, mPDBlockSize * sizeof(float));
 
-        memset(out_buf, 0, mPDOutputBuffer.size() * sizeof(float));
-        //libpd_process_raw(in_buf, out_buf);
-        call_pd<int, const float *, const float *>(mLIBPDHandle, "libpd_process_raw", in_buf, out_buf);
+          memset(out_buf, 0, mPDOutputBuffer.size() * sizeof(float));
+          //libpd_process_raw(in_buf, out_buf);
+          call_pd<int, const float *, const float *>(mLIBPDHandle, "libpd_process_raw", in_buf, out_buf);
 
-        for (uint32_t c = 0; c < mAudioOut.size(); c++)
-          memcpy(p(mAudioOut[c]) + i, out_buf + c * mPDBlockSize, mPDBlockSize * sizeof(float));
-      }
-      current_plugin = nullptr;
-      call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", patch_switch.c_str(), 0.0f);
+          for (uint32_t c = 0; c < mAudioOut.size(); c++)
+            memcpy(p(mAudioOut[c]) + i, out_buf + c * mPDBlockSize, mPDBlockSize * sizeof(float));
+        }
+        current_plugin = nullptr;
+        call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", patch_switch.c_str(), 0.0f);
+      });
     }
 
     std::map<uint32_t, std::string> mControlIn;
