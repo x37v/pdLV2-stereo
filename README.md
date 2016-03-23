@@ -13,6 +13,8 @@ this should be fine though since the audio i/o sizes don't change and we're doin
 
 Need to clean up PD patch when plugin closes.
 Need to search for libpd.so and copy it into bundle instead of having it in top project dir??
+Can consolidate the templates and pass arguments to function pointers with std::forward ?
+http://en.cppreference.com/w/cpp/utility/forward
 
 
 Try multiple intances of libpd as a shared object?:
