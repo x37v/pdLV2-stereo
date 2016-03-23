@@ -7,7 +7,7 @@ HEADERS = $(addsuffix /plugin.h, $(BUILD_DIRS))
 PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
 LDFLAGS = -lpd -L/usr/local/lib `pkg-config --libs lv2-plugin`
-CXXFLAGS = -Wl,--no-as-needed -shared -fPIC -DPIC -Isrc/ -std=c++11 `pkg-config --cflags lv2-plugin`
+CXXFLAGS = -g -Wl,--no-as-needed -shared -fPIC -DPIC -Isrc/ -std=c++11 `pkg-config --cflags lv2-plugin`
 
 #make the headers stick around so we can inspect them
 #delete this line if you don't want them in your output directories
@@ -20,7 +20,7 @@ $(BUILD_DIR)/pdlv2-%.lv2/pdlv2.so: $(BUILD_DIR)/pdlv2-%.lv2/plugin.h src/plugin.
 
 $(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb
 	ruby src/process.rb $< $(dir $@)
-	cp $(dir $<)/* $(dir $@)
+	cp libpd.so $(dir $<)/* $(dir $@) #XXX TMP
 
 install: $(PLUGINS)
 	mkdir -p $(INSTALL_DIR)
