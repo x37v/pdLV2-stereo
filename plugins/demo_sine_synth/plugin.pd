@@ -86,14 +86,14 @@ ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE \, DATA OR PROFITS
 ACTION \, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
 OF THIS SOFTWARE.;
 #X restore 510 596 pd license;
-#X obj 104 465 r \$0-lv2-control1 label:Frequency range: 0 440 20000
+#X obj 104 465 r \$1-lv2-control1 label:Frequency range: 0 440 20000
 ;
-#X obj 105 521 r \$0-lv2-control2 label:Amplitude range: 0 0.2 1;
-#X obj 107 583 r \$0-lv2-control3 label:Smoothing range: 0.5 20 1000
+#X obj 105 521 r \$1-lv2-control2 label:Amplitude range: 0 0.2 1;
+#X obj 107 583 r \$1-lv2-control3 label:Smoothing range: 0.5 20 1000
 ;
-#X obj 108 635 r \$0-lv2-control4 label:Vibrato-Freq range: 0 20 100
+#X obj 108 635 r \$1-lv2-control4 label:Vibrato-Freq range: 0 20 100
 ;
-#X obj 108 698 r \$0-lv2-control5 label:Vibrato-Depth range: 0 20 100
+#X obj 108 698 r \$1-lv2-control5 label:Vibrato-Depth range: 0 20 100
 ;
 #X obj 57 324 print;
 #X connect 0 0 40 0;

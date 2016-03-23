@@ -27,8 +27,8 @@ DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
 
 @objRegex = /#X obj \d+ \d+ /
 @msgRegex = /#X msg \d+ \d+ /
-@controlInRegex = /#{@objRegex}r(?:eceive){0,1}\s*\\\$0-lv2-(.*);\s*/
-@controlOutRegex = /#{@objRegex}s(?:end){0,1}\s*\\\$0-lv2-(.*);\s*/
+@controlInRegex = /#{@objRegex}r(?:eceive){0,1}\s*\\\$1-lv2-(.*);\s*/
+@controlOutRegex = /#{@objRegex}s(?:end){0,1}\s*\\\$1-lv2-(.*);\s*/
 @controlLabelRegex = /label:\s*([\w-]*)/
 @floatRegex = /\d+(?:\.\d+)?/
 @rangeRegex = /range:\s+(#{@floatRegex})\s*(#{@floatRegex})\s*(#{@floatRegex})/

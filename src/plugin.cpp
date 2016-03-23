@@ -38,7 +38,7 @@ namespace {
   //spin lock
   void with_instance(t_pdinstance * instance, std::function<void()> func) {
     while (pd_global_lock.test_and_set(std::memory_order_acquire));  // spin, acquire lock
-    pd_setinstance(instance);
+    //pd_setinstance(instance);
     func();
     pd_global_lock.clear(std::memory_order_release); // release lock
   }
@@ -67,9 +67,11 @@ class PDLv2Plugin :
         }
       }
 
+      /*
       with_lock([this]() {
         mPDInstance = pdinstance_new();
       });
+      */
       with_instance(mPDInstance, [this, rate]() {
         libpd_set_printhook((t_libpd_printhook) pdprint);
         libpd_init();
@@ -103,7 +105,7 @@ class PDLv2Plugin :
 
     virtual ~PDLv2Plugin() {
       with_lock([this]() {
-        pdinstance_free(mPDInstance);
+        //pdinstance_free(mPDInstance);
       });
     }
 
@@ -128,6 +130,9 @@ class PDLv2Plugin :
       with_instance(mPDInstance, [this, nframes]() {
         current_plugin = this; //for floathook
 
+        const std::string patch_switch = std::to_string(mPDDollarZero) + "-lv2-switch";
+        libpd_float(patch_switch.c_str(), 1.0f);
+
         for (auto& kv: mControlIn) {
           std::string ctrl_name = kv.second;
           float value = *p(kv.first);
@@ -149,6 +154,7 @@ class PDLv2Plugin :
           for (uint32_t c = 0; c < mAudioOut.size(); c++)
             memcpy(p(mAudioOut[c]) + i, out_buf + c * mPDBlockSize, mPDBlockSize * sizeof(float));
         }
+        libpd_float(patch_switch.c_str(), 0.0f);
         current_plugin = nullptr;
       });
     }

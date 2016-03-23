@@ -14,5 +14,5 @@ namespace pdlv2 {
         std::string _name) : type(_type), name(_name) {}
   };
 
-  const char * patch_file_name = "plugin.pd";
+  const char * patch_file_name = "host.pd";
 }

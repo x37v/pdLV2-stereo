@@ -18,9 +18,9 @@ all: $(PLUGINS)
 $(BUILD_DIR)/pdlv2-%.lv2/pdlv2.so: $(BUILD_DIR)/pdlv2-%.lv2/plugin.h src/plugin.cpp
 	$(CXX) $(CXXFLAGS) src/plugin.cpp -I$(dir $<) -o $@ $(LDFLAGS)
 
-$(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb
+$(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb src/host.pd
 	ruby src/process.rb $< $(dir $@)
-	cp $(dir $<)/* $(dir $@)
+	cp src/host.pd $(dir $<)/* $(dir $@)
 
 install: $(PLUGINS)
 	mkdir -p $(INSTALL_DIR)

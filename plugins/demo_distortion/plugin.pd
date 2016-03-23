@@ -97,8 +97,8 @@ ACTION \, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
 OF THIS SOFTWARE.;
 #X restore 62 804 pd license;
 #X obj 57 152 print;
-#X obj 90 286 r \$0-lv2-control1 label:DryWet range: 0 0.5 1;
-#X obj 90 342 r \$0-lv2-control2 label:Drive range: 0 2 150;
+#X obj 90 286 r \$1-lv2-control1 label:DryWet range: 0 0.5 1;
+#X obj 90 342 r \$1-lv2-control2 label:Drive range: 0 2 150;
 #X obj 832 222 adc~ 1 2;
 #X obj 835 820 dac~ 1 2;
 #X connect 0 0 4 0;
