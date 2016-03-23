@@ -154,16 +154,15 @@ class PDLv2Plugin :
       call_pd_ret_void<t_libpd_printhook>(mLIBPDHandle, "libpd_set_printhook", (t_libpd_printhook)pdprint);
       //libpd_set_printhook((t_libpd_printhook) pdprint);
 
-      call_pd_void<int>(mLIBPDHandle, "libpd_init");
-      /*
-      //libpd_init();
-      int (*iptr)(void);
-      iptr = (int (*)(void))dlsym(mLIBPDHandle, "libpd_init");
-      (*iptr);
-      */
+      if (call_pd<int, const char *>(mLIBPDHandle, "libpd_exists", "PDLV2-TEST") != 0) {
+        cout << plugin_bundle_path << " EXISTS" << endl;
+      } else {
+        call_pd_void<int>(mLIBPDHandle, "libpd_init");
+        call_pd<void*, const char *>(mLIBPDHandle, "libpd_bind", "PDLV2-TEST");
+        //libpd_init_audio(mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
+        call_pd<int, int, int, int>(mLIBPDHandle, "libpd_init_audio", mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
+      }
 
-      //libpd_init_audio(mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
-      call_pd<int, int, int, int>(mLIBPDHandle, "libpd_init_audio", mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
       //libpd_set_floathook(&pd_floathook);
       call_pd_ret_void<const t_libpd_floathook>(mLIBPDHandle, "libpd_set_floathook", &pd_floathook);
 
