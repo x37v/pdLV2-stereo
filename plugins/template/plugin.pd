@@ -3,8 +3,8 @@
 #X obj 325 153 print balance;
 #X obj 325 56 change;
 #X obj 325 126 change;
-#X obj 325 30 r \$0-lv2-width label:Width range: 0 0.5 1;
-#X obj 325 101 receive \$0-lv2-balance label:Balance range: 0 0.5 1
+#X obj 325 30 r \$1-lv2-width label:Width range: 0 0.5 1;
+#X obj 325 101 receive \$1-lv2-balance label:Balance range: 0 0.5 1
 ;
 #X text 653 43 make a message with pluginURI: http://x37v.info/myplugin2.html
 , f 76;
@@ -17,7 +17,7 @@
 #X msg 654 78 pluginURI: http://x37v.info/pdlv2/templateplugin.html
 ;
 #X text 74 41 just passing through right now;
-#X obj 459 299 s \$0-lv2-outtest label:Test range: 0 0.25 1;
+#X obj 459 299 s \$1-lv2-outtest label:Test range: 0 0.25 1;
 #X connect 2 0 0 0;
 #X connect 3 0 1 0;
 #X connect 3 0 14 0;
