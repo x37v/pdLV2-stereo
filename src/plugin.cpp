@@ -127,9 +127,9 @@ class PDLv2Plugin :
     PDLv2Plugin(double rate) : Plugin<PDLv2Plugin>(pdlv2::ports.size()) {
       const std::string plugin_bundle_path(bundle_path());
       std::string so_path = plugin_bundle_path + "/libpd.so";
-      mLIBPDHandle = dlmopen(LM_ID_NEWLM, so_path.c_str(), RTLD_NOW);
+      //mLIBPDHandle = dlmopen(LM_ID_NEWLM, so_path.c_str(), RTLD_NOW);
       //mLIBPDHandle = dlopen(so_path.c_str(), RTLD_NOW); //works
-      //mLIBPDHandle = dlopen(so_path.c_str(), RTLD_NOW | RTLD_DEEPBIND | RTLD_LOCAL); //fucked up sound
+      mLIBPDHandle = dlopen(so_path.c_str(), RTLD_NOW | RTLD_DEEPBIND | RTLD_LOCAL); //fucked up sound with multiple copies of same plugin
       if (mLIBPDHandle == NULL) {
         cerr << "cannot load libpd library" << endl;
         set_ok(false);
