@@ -8,7 +8,8 @@ Linux only at the moment.
 NOTE
 ----
 
-THIS IS A WORK IN PROGRESS, YOU CANNOT CURRENTLY RUN INSTANCES OF DIFFERENT PDLV2 WRAPPED PLUGINS IN THE SAME HOST.
+Multiple instances work.. BUT, should probably make the dlopen a class variable because the library seems to be the same between instances..
+this should be fine though since the audio i/o sizes don't change and we're doing the switch message now
 
 Try multiple intances of libpd as a shared object?:
 * http://stackoverflow.com/questions/1716472/using-libtool-to-load-a-duplicate-function-name-from-a-shared-library
