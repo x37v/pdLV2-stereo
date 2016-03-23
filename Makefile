@@ -6,7 +6,7 @@ BUILD_DIRS = $(addsuffix .lv2, $(addprefix $(BUILD_DIR)/pdlv2-, $(notdir $(SOURC
 HEADERS = $(addsuffix /plugin.h, $(BUILD_DIRS))
 PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
-LDFLAGS = -lpd -L/usr/local/lib `pkg-config --libs lv2-plugin`
+LDFLAGS = -lpd -L/usr/local/lib `pkg-config --libs lv2-plugin` -ldl
 CXXFLAGS = -g -Wl,--no-as-needed -shared -fPIC -DPIC -Isrc/ -std=c++11 `pkg-config --cflags lv2-plugin`
 
 #make the headers stick around so we can inspect them
@@ -25,6 +25,9 @@ $(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb
 install: $(PLUGINS)
 	mkdir -p $(INSTALL_DIR)
 	cp -r $(BUILD_DIR)/* $(INSTALL_DIR)
+
+test: install
+	jalv.gtk http://x37v.info/pdlv2/templateplugin.html
 
 clean:
 	rm -rf build
