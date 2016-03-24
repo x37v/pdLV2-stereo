@@ -1,5 +1,6 @@
 INSTALL_DIR = $(HOME)/.lv2/
 BUILD_DIR = build
+LIBPD_SO_LOCATION = /home/alex/local/src/libpd/libs/libpd.so
 
 SOURCES = $(wildcard plugins/*)
 BUILD_DIRS = $(addsuffix .lv2, $(addprefix $(BUILD_DIR)/pdlv2-, $(notdir $(SOURCES))))
@@ -20,7 +21,7 @@ $(BUILD_DIR)/pdlv2-%.lv2/pdlv2.so: $(BUILD_DIR)/pdlv2-%.lv2/plugin.h src/plugin.
 
 $(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb src/host.pd
 	ruby src/process.rb $< $(dir $@)
-	cp src/host.pd libpd.so $(dir $<)/* $(dir $@) #XXX TMP
+	cp src/host.pd $(LIBPD_SO_LOCATION) $(dir $<)/* $(dir $@)
 
 install: $(PLUGINS)
 	mkdir -p $(INSTALL_DIR)
