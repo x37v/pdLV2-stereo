@@ -9,6 +9,8 @@
 #include <libpd/z_libpd.h>
 #include <atomic>
 #include <functional>
+#include <fstream>
+#include <cstdio>
 
 #include "plugin.h"
 
@@ -25,6 +27,18 @@ namespace sp = std::placeholders;
 
 class PDLv2Plugin;
 namespace {
+
+  void copy_file(std::string from, std::string to) {
+    std::ifstream source(from, std::ios::binary);
+    std::ofstream dest(to, std::ios::binary);
+
+    dest << source.rdbuf();
+
+    source.close();
+    dest.close();
+  }
+
+
   template<typename R, typename T0>
     R call_pd(void * library_handle, std::string func_name, T0 arg0) {
       R (*ptr)(T0);
@@ -122,14 +136,15 @@ class PDLv2Plugin :
   private:
     void float_message_callback(const char *source, float value) {
     }
-    void * mLIBPDHandle = nullptr;
   public:
     PDLv2Plugin(double rate) : Plugin<PDLv2Plugin>(pdlv2::ports.size()) {
       const std::string plugin_bundle_path(bundle_path());
       std::string so_path = plugin_bundle_path + "/libpd.so";
-      //mLIBPDHandle = dlmopen(LM_ID_NEWLM, so_path.c_str(), RTLD_NOW);
-      //mLIBPDHandle = dlopen(so_path.c_str(), RTLD_NOW); //works
-      mLIBPDHandle = dlopen(so_path.c_str(), RTLD_NOW | RTLD_DEEPBIND | RTLD_LOCAL); //fucked up sound with multiple copies of same plugin
+      mLIBPDUniquePath = std::string(std::tmpnam(nullptr)) + "-libpd.so";
+
+      copy_file(so_path, mLIBPDUniquePath);
+      //XXX what flags do we need now since we have our own unique plugin?
+      mLIBPDHandle = dlopen(mLIBPDUniquePath.c_str(), RTLD_NOW | RTLD_DEEPBIND | RTLD_LOCAL);
       if (mLIBPDHandle == NULL) {
         cerr << "cannot load libpd library" << endl;
         set_ok(false);
@@ -195,6 +210,8 @@ class PDLv2Plugin :
     }
 
     virtual ~PDLv2Plugin() {
+      dlclose(mLIBPDHandle);
+      std::remove(mLIBPDUniquePath.c_str());
     }
 
     void process_float(std::string prefix, float value) {
@@ -253,6 +270,8 @@ class PDLv2Plugin :
     size_t mPDBlockSize = 64;
     std::vector<float> mPDInputBuffer;
     std::vector<float> mPDOutputBuffer;
+    void * mLIBPDHandle = nullptr;
+    std::string mLIBPDUniquePath;
 };
 
 namespace {
