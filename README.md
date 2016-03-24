@@ -8,16 +8,6 @@ Linux only at the moment.
 NOTE
 ----
 
-Need to search for libpd.so and copy it into bundle instead of having it in top project dir??
-Can consolidate the templates and pass arguments to function pointers with std::forward ?
-http://en.cppreference.com/w/cpp/utility/forward
-
-Try multiple intances of libpd as a shared object?:
-* http://stackoverflow.com/questions/1716472/using-libtool-to-load-a-duplicate-function-name-from-a-shared-library
-* http://stackoverflow.com/questions/1745975/load-multiple-copies-of-a-shared-library
-* carla --gdb for testing with multiple plugins at a time.. though my version doesn't seem to invoke gdb
-* jalv.. how do we run it in GDB and load our plugin's symbols?
-
 Your lv2 host needs to provide processing blocks in multiples of pd's block size, which defaults to 64. 
 Hopefully we can relax this requirement in the future.
 
@@ -86,6 +76,19 @@ References
   * the library used to generate the rdf plugin specification
 * [doap rdf](https://github.com/edumbill/doap/) Documentation of a project
 * [LV2 plugins](http://lv2plug.in/)
+
+
+Debugging, dev
+----
+
+Can consolidate the templates and pass arguments to function pointers with std::forward ?
+http://en.cppreference.com/w/cpp/utility/forward
+
+Try multiple intances of libpd as a shared object?:
+* http://stackoverflow.com/questions/1716472/using-libtool-to-load-a-duplicate-function-name-from-a-shared-library
+* http://stackoverflow.com/questions/1745975/load-multiple-copies-of-a-shared-library
+* carla --gdb for testing with multiple plugins at a time.. though my version doesn't seem to invoke gdb
+* jalv.. how do we run it in GDB and load our plugin's symbols?
 
 
 TODO
