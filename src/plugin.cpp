@@ -159,25 +159,19 @@ class PDLv2Plugin :
       }
 
       call_pd_ret_void<t_libpd_printhook>(mLIBPDHandle, "libpd_set_printhook", (t_libpd_printhook)pdprint);
-      //libpd_set_printhook((t_libpd_printhook) pdprint);
 
       if (call_pd<int, const char *>(mLIBPDHandle, "libpd_exists", "PDLV2-TEST") != 0) {
         cout << plugin_bundle_path << " EXISTS" << endl;
       } else {
         call_pd_void<int>(mLIBPDHandle, "libpd_init");
         call_pd<void*, const char *>(mLIBPDHandle, "libpd_bind", "PDLV2-TEST");
-        //libpd_init_audio(mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
         call_pd<int, int, int, int>(mLIBPDHandle, "libpd_init_audio", mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
       }
 
-      //libpd_set_floathook(&pd_floathook);
       call_pd_ret_void<const t_libpd_floathook>(mLIBPDHandle, "libpd_set_floathook", &pd_floathook);
 
-      //void *fileHandle = libpd_openfile(pdlv2::patch_file_name, plugin_bundle_path.c_str()); // open patch   [; pd open file folder(
-      void *fileHandle = call_pd<void *, const char *, const char *>(mLIBPDHandle, "libpd_openfile", pdlv2::patch_file_name, plugin_bundle_path.c_str()); // open patch   [; pd open file folder(
-      //mPDDollarZero = libpd_getdollarzero(fileHandle); // get dollarzero from patch
-      mPDDollarZero = call_pd<int, void *>(mLIBPDHandle, "libpd_getdollarzero", fileHandle); // get dollarzero from patch
-      //mPDBlockSize = libpd_blocksize();
+      mPatchFileHandle = call_pd<void *, const char *, const char *>(mLIBPDHandle, "libpd_openfile", pdlv2::patch_file_name, plugin_bundle_path.c_str());
+      mPDDollarZero = call_pd<int, void *>(mLIBPDHandle, "libpd_getdollarzero", mPatchFileHandle); // get dollarzero from patch
       mPDBlockSize = call_pd_void<int>(mLIBPDHandle, "libpd_blocksize");
 
       for (size_t i = 0; i < pdlv2::ports.size(); i++) {
@@ -191,7 +185,6 @@ class PDLv2Plugin :
             break;
           case pdlv2::CONTROL_OUT:
             mControlOut[i] = std::to_string(mPDDollarZero) + "-lv2-" + info.name;
-            //libpd_bind(mControlOut[i].c_str());
             call_pd<void*, const char *>(mLIBPDHandle, "libpd_bind", mControlOut[i].c_str());
             break;
         }
@@ -202,6 +195,7 @@ class PDLv2Plugin :
     }
 
     virtual ~PDLv2Plugin() {
+      call_pd_ret_void<void *>(mLIBPDHandle, "libpd_closefile", mPatchFileHandle);
       dlclose(mLIBPDHandle);
       std::remove(mLIBPDUniquePath.c_str());
     }
@@ -222,32 +216,31 @@ class PDLv2Plugin :
     }
 
     void run(uint32_t nframes) {
-      with_lock([this, nframes] () {
-        current_plugin = this; //for floathook
-        for (auto& kv: mControlIn) {
-          std::string ctrl_name = kv.second;
-          float value = *p(kv.first);
-          call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", ctrl_name.c_str(), value);
-        }
+      for (auto& kv: mControlIn) {
+        std::string ctrl_name = kv.second;
+        float value = *p(kv.first);
+        call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", ctrl_name.c_str(), value);
+      }
 
-        //XXX need to juggle between lv2 frames and pd blocks because libpd_process_raw expects nchannels * block_size length arrays
+      //XXX need to juggle between lv2 frames and pd blocks because libpd_process_raw expects nchannels * block_size length arrays
 
-        //XXX pd block size has to be an equal divisor of nframes
-        float * in_buf = &mPDInputBuffer.front();
-        float * out_buf = &mPDOutputBuffer.front();
-        for (uint32_t i = 0; i < nframes; i += mPDBlockSize) {
-          for (uint32_t c = 0; c < mAudioIn.size(); c++)
-            memcpy(in_buf + c * mPDBlockSize, p(mAudioIn[c]) + i, mPDBlockSize * sizeof(float));
+      //XXX pd block size has to be an equal divisor of nframes
+      float * in_buf = &mPDInputBuffer.front();
+      float * out_buf = &mPDOutputBuffer.front();
+      for (uint32_t i = 0; i < nframes; i += mPDBlockSize) {
+        for (uint32_t c = 0; c < mAudioIn.size(); c++)
+          memcpy(in_buf + c * mPDBlockSize, p(mAudioIn[c]) + i, mPDBlockSize * sizeof(float));
 
-          memset(out_buf, 0, mPDOutputBuffer.size() * sizeof(float));
-          //libpd_process_raw(in_buf, out_buf);
+        memset(out_buf, 0, mPDOutputBuffer.size() * sizeof(float));
+        with_lock([this, in_buf, out_buf] () {
+          current_plugin = this; //for floathook
           call_pd<int, const float *, const float *>(mLIBPDHandle, "libpd_process_raw", in_buf, out_buf);
+          current_plugin = nullptr;
+        });
 
-          for (uint32_t c = 0; c < mAudioOut.size(); c++)
-            memcpy(p(mAudioOut[c]) + i, out_buf + c * mPDBlockSize, mPDBlockSize * sizeof(float));
-        }
-        current_plugin = nullptr;
-      });
+        for (uint32_t c = 0; c < mAudioOut.size(); c++)
+          memcpy(p(mAudioOut[c]) + i, out_buf + c * mPDBlockSize, mPDBlockSize * sizeof(float));
+      }
     }
 
     std::map<uint32_t, std::string> mControlIn;
@@ -260,6 +253,7 @@ class PDLv2Plugin :
     std::vector<float> mPDOutputBuffer;
     void * mLIBPDHandle = nullptr;
     std::string mLIBPDUniquePath;
+    void * mPatchFileHandle = nullptr;
 };
 
 namespace {
