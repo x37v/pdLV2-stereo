@@ -30,6 +30,9 @@ Only works on Linux as far as I know
 Install these:
 * [Pure Data](http://msp.ucsd.edu/software.html) can use package manager
 * [libpd](https://github.com/libpd/libpd)
+	* included as a submodule so just run the following then the make process should work
+	* _git submodule init_
+	* _git submodule update_
 * [lv2-c++-tools](http://www.nongnu.org/ll-plugins/hacking.html) can use package manager
 * [ruby](https://www.ruby-lang.org) use package manager or rvm
 * [bundler](http://bundler.io/) gem or package manager

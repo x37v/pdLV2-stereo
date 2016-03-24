@@ -1,6 +1,5 @@
 INSTALL_DIR = $(HOME)/.lv2/
 BUILD_DIR = build
-LIBPD_SO_LOCATION = /home/alex/local/src/libpd/libs/libpd.so
 
 SOURCES = $(wildcard plugins/*)
 BUILD_DIRS = $(addsuffix .lv2, $(addprefix $(BUILD_DIR)/pdlv2-, $(notdir $(SOURCES))))
@@ -9,6 +8,7 @@ PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
 LDFLAGS = -lpd -L/usr/local/lib `pkg-config --libs lv2-plugin` -ldl
 CXXFLAGS = -g -Wl,--no-as-needed -shared -fPIC -DPIC -Isrc/ -std=c++11 `pkg-config --cflags lv2-plugin`
+LIBPD_SO = libpd/libs/libpd.so
 
 #make the headers stick around so we can inspect them
 #delete this line if you don't want them in your output directories
@@ -19,9 +19,12 @@ all: $(PLUGINS)
 $(BUILD_DIR)/pdlv2-%.lv2/pdlv2.so: $(BUILD_DIR)/pdlv2-%.lv2/plugin.h src/plugin.cpp
 	$(CXX) $(CXXFLAGS) src/plugin.cpp -I$(dir $<) -o $@ $(LDFLAGS)
 
-$(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb src/host.pd
+$(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb src/host.pd $(LIBPD_SO)
 	ruby src/process.rb $< $(dir $@)
-	cp src/host.pd $(LIBPD_SO_LOCATION) $(dir $<)/* $(dir $@)
+	cp src/host.pd $(LIBPD_SO) $(dir $<)/* $(dir $@)
+
+$(LIBPD_SO):
+	cd libpd/ && make libpd
 
 install: $(PLUGINS)
 	mkdir -p $(INSTALL_DIR)
