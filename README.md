@@ -33,6 +33,7 @@ Install these:
 	* included as a submodule so just run the following then the make process should work
 	* _git submodule init_
 	* _git submodule update_
+	* then do the same in the _libpd_ directory
 * [lv2-c++-tools](http://www.nongnu.org/ll-plugins/hacking.html) can use package manager
 * [ruby](https://www.ruby-lang.org) use package manager or rvm
 * [bundler](http://bundler.io/) gem or package manager
