@@ -1,5 +1,2 @@
 #N canvas 0 49 1364 717 10;
-#X obj 431 72 receive \$0-lv2-switch;
-#X obj 431 96 switch~;
 #X obj 335 103 plugin \$0;
-#X connect 0 0 1 0;

@@ -120,14 +120,6 @@ namespace {
     func();
     pd_global_lock.clear(std::memory_order_release); // release lock
   }
-
-  //spin lock
-  void with_instance(t_pdinstance * instance, std::function<void()> func) {
-    while (pd_global_lock.test_and_set(std::memory_order_acquire));  // spin, acquire lock
-    //pd_setinstance(instance);
-    func();
-    pd_global_lock.clear(std::memory_order_release); // release lock
-  }
 }
 
 class PDLv2Plugin :
@@ -232,9 +224,6 @@ class PDLv2Plugin :
     void run(uint32_t nframes) {
       with_lock([this, nframes] () {
         current_plugin = this; //for floathook
-        const std::string patch_switch = std::to_string(mPDDollarZero) + "-lv2-switch";
-        call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", patch_switch.c_str(), 1.0f);
-
         for (auto& kv: mControlIn) {
           std::string ctrl_name = kv.second;
           float value = *p(kv.first);
@@ -258,7 +247,6 @@ class PDLv2Plugin :
             memcpy(p(mAudioOut[c]) + i, out_buf + c * mPDBlockSize, mPDBlockSize * sizeof(float));
         }
         current_plugin = nullptr;
-        call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", patch_switch.c_str(), 0.0f);
       });
     }
 
