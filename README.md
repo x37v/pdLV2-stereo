@@ -8,26 +8,15 @@ Linux only at the moment.
 NOTE
 ----
 
-Multiple instances work.. BUT, should probably make the dlopen a class variable because the library seems to be the same between instances..
-this should be fine though since the audio i/o sizes don't change and we're doing the switch message now
-
-Need to clean up PD patch when plugin closes.
 Need to search for libpd.so and copy it into bundle instead of having it in top project dir??
 Can consolidate the templates and pass arguments to function pointers with std::forward ?
 http://en.cppreference.com/w/cpp/utility/forward
-
 
 Try multiple intances of libpd as a shared object?:
 * http://stackoverflow.com/questions/1716472/using-libtool-to-load-a-duplicate-function-name-from-a-shared-library
 * http://stackoverflow.com/questions/1745975/load-multiple-copies-of-a-shared-library
 * carla --gdb for testing with multiple plugins at a time.. though my version doesn't seem to invoke gdb
 * jalv.. how do we run it in GDB and load our plugin's symbols?
-
-OR, could use the plugin.pd as an abstraction in a host.pd which contains the [switch~] we need
-and passes $0 as an arg to the plugin, use the processor.rb to rewrite $0-lv2 control stuff to $1-lv2
-	* is loading a patch thread safe?
-	* can we dynamically resize the number of audio i/o from PD while its running or should we just have a fixed max?
-	* can we use some combination of dlopen or static linking and this, each pdlv2 plugin class has its own copy but not each instance??
 
 Your lv2 host needs to provide processing blocks in multiples of pd's block size, which defaults to 64. 
 Hopefully we can relax this requirement in the future.
