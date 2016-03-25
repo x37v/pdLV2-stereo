@@ -258,16 +258,22 @@ def write_rdf(data, path)
   end
 
   FileUtils.mkdir_p(path)
-  File.open(File.join(path, manifest_file), "w") do |f|
+  manifest_file = File.join(path, manifest_file)
+  puts "writing #{manifest_file}"
+  File.open(manifest_file, "w") do |f|
     f.print manifest.to_ttl
   end
-  File.open(File.join(path, details_file), "w") do |f|
+
+  details_file = File.join(path, details_file)
+  puts "writing #{details_file}"
+  File.open(details_file, "w") do |f|
     f.print details.to_ttl
   end
 end
 
 def write_header(data, path)
   file_path = File.join(path, "plugin.h")
+  puts "writing #{file_path}"
   File.open(file_path, "w") do |f|
     f.puts '#include "defines.h"'
     f.puts "\n"
@@ -347,7 +353,9 @@ def rewrite_host(data, host_in, path)
     end
   end
 
-  File.open(File.join(path, "host.pd"), "w") do |f|
+  file_path = File.join(path, "host.pd")
+  puts "writing #{file_path}"
+  File.open(file_path, "w") do |f|
     out_host.each do |h|
       f.puts h
     end
