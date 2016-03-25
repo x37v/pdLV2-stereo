@@ -1,2 +1,4 @@
-#N canvas 0 49 1364 717 10;
-#X obj 335 103 plugin \$0;
+#N canvas 1922 51 1916 1027 10;
+#X obj 30 59 plugin \$0;
+#X obj 30 31 adc~ 1;
+#X obj 30 87 dac~ 1;
