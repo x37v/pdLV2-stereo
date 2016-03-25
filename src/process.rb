@@ -116,16 +116,24 @@ def parse_pd_file(patch_path)
           end
         end
       end
+      in_subpatch = subpatch_open.size > 0
+
+      if l =~ /#{@objRegex}inlet[^~]*;/ and not in_subpatch
+        raise "control inlets not supported in plugin top level"
+      end
+      if l =~ /#{@objRegex}outlet[^~]*;/ and not in_subpatch
+        raise "control outlets not supported in plugin top level"
+      end
 
       if l =~ @audioOutRegex
-        next if subpatch_open.size > 0 #don't do inlet~ or outlet~ in subpatch
+        next if in_subpatch #don't do inlet~ or outlet~ in subpatch
         begin
           audio_out << get_audio_data($1, $2, $3)
         rescue => e
           raise "problem with #{l} #{e}"
         end
       elsif l =~ @audioInRegex
-        next if subpatch_open.size > 0 #don't do inlet~ or outlet~ in subpatch
+        next if in_subpatch #don't do inlet~ or outlet~ in subpatch
         begin
           audio_in << get_audio_data($1, $2, $3)
         rescue => e
