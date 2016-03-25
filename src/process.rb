@@ -23,13 +23,21 @@ require 'rdf/ntriples'
 require 'linkeddata'
 require 'fileutils'
 
+#arguments: source_pd_patch destination_directory
+
 DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
 
-@objRegex = /#X obj \d+ \d+ /
-@msgRegex = /#X msg \d+ \d+ /
+@objRegex = /#X obj (\d+) (\d+) / #obj x y
+@msgRegex = /#X msg (\d+) (\d+) /
+
 @controlInRegex = /#{@objRegex}r(?:eceive){0,1}\s*\\\$1-lv2-(.*);\s*/
 @controlOutRegex = /#{@objRegex}s(?:end){0,1}\s*\\\$1-lv2-(.*);\s*/
-@controlLabelRegex = /label:\s*([\w-]*)/
+
+@audioInRegex = /#{@objRegex}inlet~\s*(.*?);\s*/
+@audioOutRegex = /#{@objRegex}outlet~\s*(.*?);\s*/
+
+@labelRegex = /label:\s*([\w-]*)/
+@groupRegex = /group:\s*([\w-]*)/
 @floatRegex = /\d+(?:\.\d+)?/
 @rangeRegex = /range:\s+(#{@floatRegex})\s*(#{@floatRegex})\s*(#{@floatRegex})/
 
@@ -37,7 +45,7 @@ def get_control_data(content)
   data = {}
   data[:symbol] = content.match(/\A(\w+)/)[0]
   data[:label] =
-    if content =~ @controlLabelRegex
+    if content =~ @labelRegex
       $1
     else
       data[:symbol]
@@ -49,9 +57,34 @@ def get_control_data(content)
   return data
 end
 
+def get_audio_data(x, y, content)
+  data = {:x => x.to_i}
+  if content =~ @labelRegex
+    data[:label] = $1
+  else
+    raise "audio inlets/outlets need to have a label"
+  end
+  if content =~ @groupRegex
+    data[:group] = $1
+  end
+  return data
+end
+
+def consolidate_pd_lines(lines)
+  out = []
+  #unwrap wrapped lines
+  lines.each do |l|
+    #pd lines start with # unless they're a continuation
+    unless l =~ /\A#/ or lines.size == 0
+      l = lines.pop + l
+    end
+    out << l.chomp
+  end
+end
+
 def parse_pd_file(patch_path)
-  input = 0
-  output = 0
+  audio_in = []
+  audio_out = []
   name = nil
   uri = nil
   in_controls = []
@@ -59,37 +92,28 @@ def parse_pd_file(patch_path)
   license = DEFAULT_LICENSE
 
   File.open(patch_path) do |f|
-    lines = []
-    #unwrap wrapped lines
-    f.readlines.each do |l|
-      #pd lines start with # unless they're a continuation
-      unless l =~ /\A#/ or lines.size == 0
-        l = lines.pop + l
-      end
-      lines << l.chomp
-    end
+    lines = consolidate_pd_lines(f.readlines)
 
-    lines.each do |l|
-      if l =~ /#{@objRegex}dac~\s?(.*?);\s*/
-        unless $1.size > 0 #default no args, 2 outputs
-          output = 2 if 2 > output
-        else
-          $1.scan(/\d+/).each do |d|
-            output = d.to_i if d.to_i > output
-          end
+    lines.each_with_index do |l, line_num|
+      raise "dac~ not supported" if l =~ /#{@objRegex}dac~/
+      raise "adc~ not supported" if l =~ /#{@objRegex}adc~/
+
+      if l =~ @audioOutRegex
+        begin
+          audio_out << get_audio_data($1, $2, $3)
+        rescue => e
+          raise "problem with #{l} #{e}"
         end
-      elsif l =~ /#{@objRegex}adc~\s?(.*?);\s*/
-        unless $1.size > 0 #default, no args, 2 inputs
-          input = 2 if 2 > input
-        else
-          $1.scan(/\d+/).each do |d|
-            input = d.to_i if d.to_i > input
-          end
+      elsif l =~ @audioInRegex
+        begin
+          audio_in << get_audio_data($1, $2, $3)
+        rescue => e
+          raise "problem with #{l}\n#{e}"
         end
       elsif l =~ @controlInRegex
-        in_controls << get_control_data($1)
+        in_controls << get_control_data($3)
       elsif l =~ @controlOutRegex
-        out_controls << get_control_data($1)
+        out_controls << get_control_data($3)
       elsif l =~ /#{@msgRegex}pluginURI:\s(.*);\s*/
         uri = $1
       elsif l =~ /#{@msgRegex}pluginName:\s(.*);\s*/
@@ -101,16 +125,18 @@ def parse_pd_file(patch_path)
 
     raise "need uri" unless uri
     raise "need name" unless name
-    raise "need at least one control or audio input or output" unless input + output + in_controls.size + out_controls.size > 0
+    raise "need at least one control or audio input or output" unless audio_in.size + audio_out.size + in_controls.size + out_controls.size > 0
 
     outdata = {
       :name => name,
       :uri => uri,
       :license => license
     }
+    audio_in = audio_in.sort_by { |info| info[:x] }
+    audio_out = audio_out.sort_by { |info| info[:x] }
 
-    outdata[:audio_in] = input
-    outdata[:audio_out] = output
+    outdata[:audio_in] = audio_in
+    outdata[:audio_out] = audio_out
     outdata[:control_in] = in_controls if in_controls.size
     outdata[:control_out] = out_controls if out_controls.size
     return outdata
@@ -124,24 +150,21 @@ def print_control(data)
   puts "\t\trange: #{r.join(', ')}" if r
 end
 
+def audio_port_info(info, index, direction)
+  l = info[:label]
+  g = info[:group]
+  s = ((g ? g : direction.to_s) + "_" + l.gsub('-', '_')).downcase
+  return {:type => :audio, :dir => direction, :symbol => s, :label => l, :group => g}
+end
+
 #audio in, out, control in, out
 def ports(data)
   p = []
-  if data[:audio_in] == 2 #default naming
-      p << {:type => :audio, :dir => :in, :symbol => "audio_in_left", :label => "Audio Input Left"}
-      p << {:type => :audio, :dir => :in, :symbol => "audio_in_right", :label => "Audio Input Right"}
-  else
-    data[:audio_in].times do |i|
-      p << {:type => :audio, :dir => :in, :symbol => "audio_in_" + i.to_s, :label => "Audio Input #{i}"}
-    end
+  data[:audio_in].each_with_index do |a, i|
+    p << audio_port_info(a, i, :in)
   end
-  if data[:audio_out] == 2 #default naming
-      p << {:type => :audio, :dir => :out, :symbol => "audio_out_left", :label => "Audio Output Left"}
-      p << {:type => :audio, :dir => :out, :symbol => "audio_out_right", :label => "Audio Output Right"}
-  else
-    data[:audio_out].times do |i|
-      p << {:type => :audio, :dir => :out, :symbol => "audio_out_" + i.to_s, :label => "Audio Output #{i}"}
-    end
+  data[:audio_out].each_with_index do |a, i|
+    p << audio_port_info(a, i, :out)
   end
   data[:control_in].each do |c|
     p << c.merge({:type => :control, :dir => :in})
@@ -248,6 +271,62 @@ def write_header(data, path)
   end
 end
 
+@dacRegex = /(#X obj \d+ \d+ dac~\s*).*?;\s*/
+@adcRegex = /(#X obj \d+ \d+ adc~\s*).*?;\s*/
+
+def new_audio_line(prefix, audio_array)
+  return prefix + audio_array.size.times.collect { |i| (i + 1).to_s }.join(" ") + ";"
+end
+
+def connect(obout, outlet, obin, inlet)
+  "#X connect #{obout} #{outlet} #{obin} #{inlet};"
+end
+
+def rewrite_host(data, host_in, path)
+  host = consolidate_pd_lines(File.open(host_in).readlines)
+  out_host = []
+  obj_count = 0
+  obj_indx = {}
+
+  #remove or rewrite dac~ and adc~ with correct args
+  host.each do |h|
+    if h =~ @dacRegex
+      next if data[:audio_out].size == 0
+      out_host << new_audio_line($1, data[:audio_out])
+      obj_indx[:out] = obj_count
+    elsif h =~ @adcRegex
+      next if data[:audio_in].size == 0
+      out_host << new_audio_line($1, data[:audio_in])
+      obj_indx[:in] = obj_count
+    elsif h =~ /#X obj.*plugin/
+      obj_indx[:plugin] = obj_count 
+      out_host << h
+    else
+      out_host << h
+    end
+    obj_count = obj_count + 1 if h =~ @objRegex
+  end
+  raise "cannot find [plugin] in host" unless obj_indx[:plugin]
+
+  #write the connections
+  if obj_indx[:in]
+    data[:audio_in].size.times do |i|
+      out_host << connect(obj_indx[:in], i, obj_indx[:plugin], i)
+    end
+  end
+  if obj_indx[:out]
+    data[:audio_out].size.times do |i|
+      out_host << connect(obj_indx[:plugin], i, obj_indx[:out], i)
+    end
+  end
+
+  File.open(File.join(path, "host.pd"), "w") do |f|
+    out_host.each do |h|
+      f.puts h
+    end
+  end
+end
+
 source = ARGV[0]
 dest = ARGV[1]
 
@@ -256,6 +335,7 @@ begin
   data[:binary] = "pdlv2.so"
   write_rdf(data, dest)
   write_header(data, dest)
+  rewrite_host(data, "src/host.pd", dest)
 rescue => e
   puts "problem parsing #{source} #{dest}:\n\t#{e}"
   exit -1
