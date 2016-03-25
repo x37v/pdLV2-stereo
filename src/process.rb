@@ -73,7 +73,7 @@ def get_audio_data(x, y, content)
     else
       raise "#{g} not a valid group format: name:GroupClass:role"
     end
-    data[:group] = [$1, $2, $3]
+    data[:group] = {:name => $1, :type => $2, :member => $3}
   end
   return data
 end
@@ -101,9 +101,9 @@ def test_and_extract_groups(audio_ports)
   audio_ports.each do |p|
     g = p[:group]
     next unless g
-    name = g[0]
-    type = g[1]
-    member = g[2]
+    name = g[:name]
+    type = g[:type]
+    member = g[:member]
     raise "unsupported group type #{type}" unless LV2Groups::SUPPORTED[type]
     raise "unsupported group #{type} member #{member}" unless LV2Groups::SUPPORTED[type][member]
 
@@ -229,7 +229,7 @@ end
 def audio_port_info(info, index, direction)
   l = info[:label]
   g = info[:group]
-  s = ((g ? g[0] : direction.to_s) + "_" + l.gsub('-', '_')).downcase
+  s = ((g ? g[:name] : direction.to_s) + "_" + l.gsub('-', '_')).downcase
   return {:type => :audio, :dir => direction, :symbol => s, :label => l, :group => g}
 end
 
@@ -282,7 +282,7 @@ def write_rdf(data, path)
   details_file = "details.ttl"
   manifest_file = "manifest.ttl"
 
-  group_to_uri = {}
+  group_name_to_uri = {}
 
   uri = RDF::URI.new(data[:uri])
 
@@ -294,7 +294,7 @@ def write_rdf(data, path)
 
   data[:groups].each do |name, type|
     group_uri = RDF::URI.new(File.join(data[:uri], name))
-    group_to_uri[name] = group_uri
+    group_name_to_uri[name] = group_uri
     details << [group_uri, RDF.type, @pg[type.to_s]]
   end
 
@@ -318,8 +318,8 @@ def write_rdf(data, path)
     if p[:group]
       group_node = RDF::Node.new
       details << [node, @pg.membership, group_node]
-      details << [group_node, @pg.group, group_to_uri[p[:group][0]]]
-      details << [group_node, @pg.role, @pg[p[:group][2]]]
+      details << [group_node, @pg.group, group_name_to_uri[p[:group][:name]]]
+      details << [group_node, @pg.role, @pg[p[:group][:member]]]
     end
 
     if p[:range]
