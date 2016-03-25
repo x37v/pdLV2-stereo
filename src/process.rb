@@ -27,8 +27,8 @@ require 'fileutils'
 
 DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
 
-@objRegex = /#X obj (\d+) (\d+) / #obj x y
-@msgRegex = /#X msg (\d+) (\d+) /
+@objRegex = /#X obj (\d+) (\d+)\s+/ #obj x y
+@msgRegex = /#X msg \d+ \d+\s+/
 
 @controlInRegex = /#{@objRegex}r(?:eceive){0,1}\s*\\\$1-lv2-(.*);\s*/
 @controlOutRegex = /#{@objRegex}s(?:end){0,1}\s*\\\$1-lv2-(.*);\s*/
@@ -75,12 +75,16 @@ def consolidate_pd_lines(lines)
   #unwrap wrapped lines
   lines.each do |l|
     #pd lines start with # unless they're a continuation
-    unless l =~ /\A#/ or lines.size == 0
-      l = lines.pop + l
+    unless l =~ /\A#/ or out.size == 0
+      l = out.pop + l
     end
     out << l.chomp
   end
+  return out
 end
+
+@subpatchOpen = /\A#N canvas \d+ \d+ \d+ \d+ (\w+).*?;/
+@subpatchClose = /\A#X restore \d+ \d+ pd (\w+).*?;/
 
 def parse_pd_file(patch_path)
   audio_in = []
@@ -94,17 +98,34 @@ def parse_pd_file(patch_path)
   File.open(patch_path) do |f|
     lines = consolidate_pd_lines(f.readlines)
 
+    subpatch_open = {}
     lines.each_with_index do |l, line_num|
       raise "dac~ not supported" if l =~ /#{@objRegex}dac~/
       raise "adc~ not supported" if l =~ /#{@objRegex}adc~/
 
+      #look for subpatches
+      if line_num != 0
+        if l =~ @subpatchOpen
+          subpatch_open[$1] = (subpatch_open[$1] || 0) + 1
+        elsif l =~ @subpatchClose
+          raise "subpatch parse fail #{$1}" unless subpatch_open[$1]
+          if subpatch_open[$1] <= 1
+            subpatch_open.delete($1)
+          else
+            subpatch_open[$1] = subpatch_open[$1] - 1
+          end
+        end
+      end
+
       if l =~ @audioOutRegex
+        next if subpatch_open.size > 0 #don't do inlet~ or outlet~ in subpatch
         begin
           audio_out << get_audio_data($1, $2, $3)
         rescue => e
           raise "problem with #{l} #{e}"
         end
       elsif l =~ @audioInRegex
+        next if subpatch_open.size > 0 #don't do inlet~ or outlet~ in subpatch
         begin
           audio_in << get_audio_data($1, $2, $3)
         rescue => e
@@ -291,13 +312,19 @@ def rewrite_host(data, host_in, path)
   #remove or rewrite dac~ and adc~ with correct args
   host.each do |h|
     if h =~ @dacRegex
-      next if data[:audio_out].size == 0
-      out_host << new_audio_line($1, data[:audio_out])
-      obj_indx[:out] = obj_count
+      if data[:audio_out].size != 0
+        out_host << new_audio_line($1, data[:audio_out])
+        obj_indx[:out] = obj_count
+      else
+        out_host << h #keep it, shouldn't hurt anything and keeps obj count
+      end
     elsif h =~ @adcRegex
-      next if data[:audio_in].size == 0
-      out_host << new_audio_line($1, data[:audio_in])
-      obj_indx[:in] = obj_count
+      if data[:audio_in].size != 0
+        out_host << new_audio_line($1, data[:audio_in])
+        obj_indx[:in] = obj_count
+      else
+        out_host << h #keep it, shouldn't hurt anything and keeps obj count
+      end
     elsif h =~ /#X obj.*plugin/
       obj_indx[:plugin] = obj_count 
       out_host << h
@@ -329,6 +356,8 @@ end
 
 source = ARGV[0]
 dest = ARGV[1]
+
+puts "source: #{source} dest #{dest}"
 
 begin
   data = parse_pd_file(source)
