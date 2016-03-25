@@ -65,6 +65,8 @@ Workflow
 References
 ----
 
+* [lv2 categories](http://lv2plug.in/ns/lv2core/)
+* [lv2 Specifications](http://lv2plug.in/ns/)
 * [pdLV2-stereo](https://github.com/unknownError/pdLV2-stereo)
   * a libpd-lv2 plugin wrapper by [Martin Schied](https://github.com/unknownError) that [xnor](http://x37v.info) worked from to become the **pdlv2**
   * some of the example plugins come from the **pdLV2-stereo** project, slightly altered to work with this project
@@ -92,9 +94,11 @@ Try multiple intances of libpd as a shared object?:
 TODO
 ----
 
+* [validate](http://lv2plug.in/pages/validating-lv2-data.html)
 * allow specification of audio input and output names
 * allow for block sizes less than 64
 * allow whitespace in control labels
 * [plugin category](http://www.nongnu.org/ll-plugins/lv2pftci/#More_metadata)
-* [port groups](http://www.nongnu.org/ll-plugins/lv2pftci/#Port_groups)
+  * [reference](http://lv2plug.in/ns/lv2core/#sec-reference)
+* [port groups](http://ll-plugins.nongnu.org/lv2/ext/portgroups/)
 * [midi](http://lv2plug.in/ns/ext/midi#MidiEvent)
