@@ -1,27 +1,30 @@
-#N canvas 0 30 1351 717 10;
-#X obj 325 79 print width;
-#X obj 325 153 print balance;
-#X obj 325 56 change;
-#X obj 325 126 change;
-#X obj 325 30 r \$1-lv2-width label:Width range: 0 0.5 1;
-#X obj 325 101 receive \$1-lv2-balance label:Balance range: 0 0.5 1
+#N canvas 1922 51 1916 1027 10;
+#X obj 467 160 print width;
+#X obj 467 234 print balance;
+#X obj 467 137 change;
+#X obj 467 207 change;
+#X obj 467 111 r \$1-lv2-width label:Width range: 0 0.5 1;
+#X obj 467 182 receive \$1-lv2-balance label:Balance range: 0 0.5 1
 ;
-#X text 653 43 make a message with pluginURI: http://x37v.info/myplugin2.html
-, f 76;
-#X text 653 59 make a message with: pluginName: My Plugin;
-#X msg 654 119 pluginLicense: http://usefulinc.com/doap/licenses/mit
-;
-#X obj 29 41 adc~;
-#X obj 29 80 dac~;
-#X msg 654 99 pluginName: Template Plugin;
-#X msg 654 78 pluginURI: http://x37v.info/pdlv2/templateplugin.html
-;
-#X text 74 41 just passing through right now;
-#X obj 459 299 s \$1-lv2-outtest label:Test range: 0 0.25 1;
+#X msg 3 46 pluginLicense: http://usefulinc.com/doap/licenses/mit;
+#X msg 3 26 pluginName: Template Plugin;
+#X msg 3 6 pluginURI: http://x37v.info/pdlv2/templateplugin.html;
+#X obj 423 290 s \$1-lv2-outtest label:Test range: 0 0.25 1;
+#X text 731 110 input called 'Wdith' with range 0..1 and default value
+of 0.5, f 62;
+#X text 792 183 input called 'Balance' with range 0..1 and default
+value of 0.5, f 64;
+#X text 696 292 output called 'Test';
+#X obj 12 289 outlet~ label:Left group:Out;
+#X obj 188 289 outlet~ label:Right group:Out;
+#X text 467 76 controls use \$1-lv2 prefixed sends and receives;
+#X text 10 88 audio uses inlet~ and outlet~;
+#X obj 188 112 inlet~ label:Right group:In;
+#X obj 13 113 inlet~ label:Left group:In;
 #X connect 2 0 0 0;
 #X connect 3 0 1 0;
-#X connect 3 0 14 0;
+#X connect 3 0 9 0;
 #X connect 4 0 2 0;
 #X connect 5 0 3 0;
-#X connect 9 0 10 0;
-#X connect 9 1 10 1;
+#X connect 17 0 14 0;
+#X connect 18 0 13 0;

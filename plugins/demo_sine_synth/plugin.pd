@@ -1,4 +1,4 @@
-#N canvas 1922 51 975 1027 10;
+#N canvas 1922 51 1916 1027 10;
 #X obj 57 211 loadbang;
 #X obj 605 222 osc~ 440;
 #X obj 604 314 *~;
@@ -23,7 +23,6 @@
 #X floatatom 68 582 5 0 0 0 - - -, f 5;
 #X floatatom 67 634 5 0 0 0 - - -, f 5;
 #X floatatom 68 698 5 0 0 0 - - -, f 5;
-#X obj 537 344 dac~;
 #X obj 105 546 s \$0-amp;
 #X floatatom 625 267 5 0 0 0 - - -, f 5;
 #X floatatom 721 152 5 0 0 0 - - -, f 5;
@@ -34,8 +33,6 @@
 #X text 62 835 Better don't use the receives (\$0-control1 and so on)
 again in your patches as this will prevent the parser from working
 correctly.;
-#X text 95 364 Input is not needed for a sine synth here - but in case
-we want to mess with incoming audio - it is already there.;
 #X obj 552 126 r \$0-smooth;
 #X obj 619 290 lop~ 20;
 #X text 54 138 a descriptive name for your patch - choose freely. Better
@@ -63,9 +60,6 @@ the default value from my brain currently.;
 #X text 512 34 The actual synth is very simple for demonstration...
 ;
 #X text 25 35 1;
-#X text 27 365 2;
-#X text 27 415 3;
-#X text 486 32 4;
 #X text 651 57 Vibrato;
 #X text 512 55 Base Frequency.;
 #X text 722 109 Vibrato Depth;
@@ -96,37 +90,41 @@ OF THIS SOFTWARE.;
 #X obj 108 698 r \$1-lv2-control5 label:Vibrato-Depth range: 0 20 100
 ;
 #X obj 57 324 print;
-#X connect 0 0 40 0;
+#X obj 475 388 outlet~ group:Out label:left;
+#X obj 655 388 outlet~ group:Out label:right;
+#X text 27 415 2;
+#X text 486 32 3;
+#X connect 0 0 38 0;
 #X connect 1 0 2 0;
-#X connect 2 0 24 1;
+#X connect 2 0 58 0;
 #X connect 3 0 1 0;
 #X connect 3 0 14 0;
 #X connect 4 0 6 0;
 #X connect 5 0 3 0;
 #X connect 6 0 3 1;
-#X connect 7 0 29 0;
+#X connect 7 0 28 0;
 #X connect 12 0 4 0;
-#X connect 12 0 28 0;
+#X connect 12 0 27 0;
 #X connect 13 0 6 1;
-#X connect 13 0 27 0;
+#X connect 13 0 26 0;
 #X connect 14 0 17 0;
-#X connect 15 0 24 0;
-#X connect 16 0 26 0;
-#X connect 16 0 34 0;
+#X connect 15 0 57 0;
+#X connect 16 0 25 0;
+#X connect 16 0 32 0;
 #X connect 17 0 15 0;
-#X connect 18 0 34 1;
+#X connect 18 0 32 1;
 #X connect 19 0 8 0;
-#X connect 20 0 25 0;
+#X connect 20 0 24 0;
 #X connect 21 0 9 0;
 #X connect 22 0 10 0;
 #X connect 23 0 11 0;
-#X connect 29 0 5 0;
-#X connect 33 0 5 1;
-#X connect 34 0 2 1;
-#X connect 34 0 15 1;
-#X connect 40 0 61 0;
-#X connect 56 0 8 0;
-#X connect 57 0 25 0;
-#X connect 58 0 9 0;
-#X connect 59 0 10 0;
-#X connect 60 0 11 0;
+#X connect 28 0 5 0;
+#X connect 31 0 5 1;
+#X connect 32 0 2 1;
+#X connect 32 0 15 1;
+#X connect 38 0 56 0;
+#X connect 51 0 8 0;
+#X connect 52 0 24 0;
+#X connect 53 0 9 0;
+#X connect 54 0 10 0;
+#X connect 55 0 11 0;

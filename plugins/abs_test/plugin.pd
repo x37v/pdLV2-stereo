@@ -1,4 +1,4 @@
-#N canvas 0 49 1364 717 10;
+#N canvas 1922 51 1916 1027 10;
 #X obj 170 120 test_abs;
 #X obj 171 166 print;
 #X msg 423 65 pluginName: Abstraction Test;
