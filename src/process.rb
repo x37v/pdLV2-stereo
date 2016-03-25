@@ -41,6 +41,28 @@ DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
 @floatRegex = /\d+(?:\.\d+)?/
 @rangeRegex = /range:\s+(#{@floatRegex})\s*(#{@floatRegex})\s*(#{@floatRegex})/
 
+PD_MIDI_OBJ = {
+  :in => [
+    "notein",
+    "ctlin",
+    "pgmin",
+    "bendin",
+    "touchin",
+    "polytouchin",
+    "midiin",
+    "sysexin",
+  ],
+  :out => [
+    "noteout",
+    "pgmout",
+    "bendout",
+    "ctlout",
+    "touchout",
+    "polytouchout",
+    "midiout",
+  ]
+}
+
 def get_control_data(content)
   data = {}
   data[:symbol] = content.match(/\A(\w+)/)[0]
@@ -93,6 +115,8 @@ def parse_pd_file(patch_path)
   uri = nil
   in_controls = []
   out_controls = []
+  in_midi = []
+  out_midi = []
   license = DEFAULT_LICENSE
 
   File.open(patch_path) do |f|
@@ -149,12 +173,23 @@ def parse_pd_file(patch_path)
         name = $1
       elsif l =~ /#{@msgRegex}pluginLicense:\s(.*);\s*/
         license = $1
+      else
+        PD_MIDI_OBJ[:in].each do |obname|
+          in_midi << obname if l =~ /\A#X obj \d+ \d+ #{obname}/
+        end
+        PD_MIDI_OBJ[:out].each do |obname|
+          out_midi << obname if l =~ /\A#X obj \d+ \d+ #{obname}/
+        end
       end
     end
 
     raise "need uri" unless uri
     raise "need name" unless name
-    raise "need at least one control or audio input or output" unless audio_in.size + audio_out.size + in_controls.size + out_controls.size > 0
+    unless (audio_in.size + audio_out.size +
+      in_controls.size + out_controls.size +
+      in_midi.size + out_midi.size) > 0
+      raise "need at least one control or audio input or output"
+    end
 
     outdata = {
       :name => name,
@@ -168,6 +203,8 @@ def parse_pd_file(patch_path)
     outdata[:audio_out] = audio_out
     outdata[:control_in] = in_controls if in_controls.size
     outdata[:control_out] = out_controls if out_controls.size
+    outdata[:midi_in] = in_midi
+    outdata[:midi_out] = out_midi
     return outdata
   end
 end
@@ -201,6 +238,12 @@ def ports(data)
   data[:control_out].each do |c|
     p << c.merge({:type => :control, :dir => :out})
   end
+  if data[:midi_in].size > 0
+    p << {:type => :midi, :dir => :in, :symbol => 'midi_in', :label => 'Midi In'}
+  end
+  if data[:midi_out].size > 0
+    p << {:type => :midi, :dir => :out, :symbol => 'midi_out', :label => 'Midi Out'}
+  end
 
   return p
 end
@@ -212,23 +255,34 @@ def print_plugin(data)
   puts "audio inputs: #{data[:audio_in]}"
   puts "audio outputs: #{data[:audio_out]}"
 
-  if data[:control_in].size
+  if data[:control_in].size != 0
     puts "control inputs:"
     data[:control_in].each do |c|
       print_control(c)
     end
   end
 
-  if data[:control_out].size
+  if data[:control_out].size != 0
     puts "control outputs:"
     data[:control_out].each do |c|
       print_control(c)
     end
   end
+
+  if data[:midi_in].size != 0
+    puts "midi inputs:"
+    puts "\t" + data[:midi_in].join(", ")
+  end
+  if data[:midi_out].size != 0
+    puts "midi outputs:"
+    puts "\t" + data[:midi_out].join(", ")
+  end
 end
 
 @lv2 = RDF::Vocabulary.new("http://lv2plug.in/ns/lv2core#")
 @doap = RDF::Vocabulary.new("http://usefulinc.com/ns/doap#")
+@atom = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/atom#")
+@midi = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/midi#")
 
 def write_rdf(data, path)
   details_file = "details.ttl"
@@ -250,8 +304,20 @@ def write_rdf(data, path)
     node = RDF::Node.new
     details << [uri, @lv2.port, node]
     details << [node, @lv2.index, i]
-    details << [node, RDF.type, @lv2.AudioPort] if p[:type] == :audio 
-    details << [node, RDF.type, @lv2.ControlPort] if p[:type] == :control 
+
+    if p[:type] == :midi
+      details << [node, RDF.type, @atom.AtomPort]
+      details << [node, @atom.bufferType, @atom.Sequence]
+      details << [node, @atom.supports, @midi.MidiEvent]
+      details << [node, @lv2.designation, @lv2.control]
+    elsif p[:type] == :audio 
+      details << [node, RDF.type, @lv2.AudioPort]
+    elsif p[:type] == :control 
+      details << [node, RDF.type, @lv2.ControlPort]
+    else
+      raise "#{p[:type]} is not a supported pdlv2 port type"
+    end
+
     details << [node, RDF.type, @lv2.InputPort] if p[:dir] == :in
     details << [node, RDF.type, @lv2.OutputPort] if p[:dir] == :out
 
@@ -295,6 +361,8 @@ def write_header(data, path)
         line = line + (p[:dir] == :out ? "AUDIO_OUT" : "AUDIO_IN")
       elsif p[:type] == :control
         line = line + (p[:dir] == :out ? "CONTROL_OUT" : "CONTROL_IN")
+      elsif p[:type] == :midi
+        line = line + (p[:dir] == :out ? "MIDI_OUT" : "MIDI_IN")
       else
         raise "#{p[:type]} not supported"
       end
@@ -377,6 +445,7 @@ puts "source: #{source} dest #{dest}"
 
 begin
   data = parse_pd_file(source)
+  #print_plugin(data)
   data[:binary] = "pdlv2.so"
   write_rdf(data, dest)
   write_header(data, dest)

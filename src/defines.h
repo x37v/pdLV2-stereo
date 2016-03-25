@@ -3,7 +3,9 @@ namespace pdlv2 {
     AUDIO_IN,
     AUDIO_OUT,
     CONTROL_IN,
-    CONTROL_OUT
+    CONTROL_OUT,
+    MIDI_IN,
+    MIDI_OUT
   };
 
   struct PortInfo {
