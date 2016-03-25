@@ -284,6 +284,20 @@ end
 @atom = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/atom#")
 @midi = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/midi#")
 
+@rdf_prefixes = {
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+  rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+  xsd:  "http://www.w3.org/2001/XMLSchema#",
+  lv2:  @lv2.to_iri.to_s,
+  doap: @doap.to_iri.to_s,
+  atom: @atom.to_iri.to_s,
+  midi: @midi.to_iri.to_s,
+}
+
+@rdf_prefixes.each do |k, v|
+  puts "#{k} => #{v}"
+end
+
 def write_rdf(data, path)
   details_file = "details.ttl"
   manifest_file = "manifest.ttl"
@@ -334,14 +348,14 @@ def write_rdf(data, path)
   FileUtils.mkdir_p(path)
   manifest_file = File.join(path, manifest_file)
   puts "writing #{manifest_file}"
-  File.open(manifest_file, "w") do |f|
-    f.print manifest.to_ttl
+  RDF::Turtle::Writer.open(manifest_file, :prefixes => @rdf_prefixes) do |writer|
+    writer << manifest
   end
 
   details_file = File.join(path, details_file)
   puts "writing #{details_file}"
-  File.open(details_file, "w") do |f|
-    f.print details.to_ttl
+  RDF::Turtle::Writer.open(details_file, :prefixes => @rdf_prefixes) do |writer|
+    writer << details
   end
 end
 
