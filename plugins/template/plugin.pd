@@ -1,4 +1,4 @@
-#N canvas 1922 51 1916 1027 10;
+#N canvas 0 49 1364 717 10;
 #X obj 467 160 print width;
 #X obj 467 234 print balance;
 #X obj 467 137 change;
@@ -15,16 +15,25 @@ of 0.5, f 62;
 #X text 792 183 input called 'Balance' with range 0..1 and default
 value of 0.5, f 64;
 #X text 696 292 output called 'Test';
-#X obj 12 289 outlet~ label:Left group:Out;
-#X obj 188 289 outlet~ label:Right group:Out;
 #X text 467 76 controls use \$1-lv2 prefixed sends and receives;
 #X text 10 88 audio uses inlet~ and outlet~;
-#X obj 188 112 inlet~ label:Right group:In;
-#X obj 13 113 inlet~ label:Left group:In;
+#X obj 12 289 outlet~ label:Left group:Out:StereoGroup:leftChannel
+;
+#X text 30 328 outlet~/inlet~ label:LabeName;
+#X text 49 345 optional: group:Name:ClassName:MemberRole;
+#X text 50 360 the Name just uniquely identifies the group \, the ClassName
+is the group class \, like StereoGroup and the MemberRole identifies
+the member that this outlet or inlet is in the group \, like rightChannel
+;
+#X obj 48 135 inlet~ label:Right group:In:StereoGroup:rightChannel
+;
+#X obj 13 113 inlet~ label:Left group:In:StereoGroup:leftChannel;
+#X obj 48 264 outlet~ label:Right group:Out:StereoGroup:rightChannel
+;
 #X connect 2 0 0 0;
 #X connect 3 0 1 0;
 #X connect 3 0 9 0;
 #X connect 4 0 2 0;
 #X connect 5 0 3 0;
-#X connect 17 0 14 0;
-#X connect 18 0 13 0;
+#X connect 19 0 21 0;
+#X connect 20 0 15 0;
