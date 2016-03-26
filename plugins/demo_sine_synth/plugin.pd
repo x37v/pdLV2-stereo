@@ -1,4 +1,4 @@
-#N canvas 1922 51 1916 1027 10;
+#N canvas 0 49 1364 717 10;
 #X obj 57 211 loadbang;
 #X obj 605 222 osc~ 440;
 #X obj 604 314 *~;
@@ -90,13 +90,15 @@ OF THIS SOFTWARE.;
 #X obj 108 698 r \$1-lv2-control5 label:Vibrato-Depth range: 0 20 100
 ;
 #X obj 57 324 print;
-#X obj 475 388 outlet~ group:Out label:left;
-#X obj 655 388 outlet~ group:Out label:right;
 #X text 27 415 2;
 #X text 486 32 3;
+#X obj 473 416 outlet~ group:Out:StereoGroup:leftChannel label:left
+;
+#X obj 655 388 outlet~ group:Out:StereoGroup:rightChannel label:right
+;
 #X connect 0 0 38 0;
 #X connect 1 0 2 0;
-#X connect 2 0 58 0;
+#X connect 2 0 60 0;
 #X connect 3 0 1 0;
 #X connect 3 0 14 0;
 #X connect 4 0 6 0;
@@ -108,7 +110,7 @@ OF THIS SOFTWARE.;
 #X connect 13 0 6 1;
 #X connect 13 0 26 0;
 #X connect 14 0 17 0;
-#X connect 15 0 57 0;
+#X connect 15 0 59 0;
 #X connect 16 0 25 0;
 #X connect 16 0 32 0;
 #X connect 17 0 15 0;

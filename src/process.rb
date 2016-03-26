@@ -23,6 +23,8 @@ require 'rdf/ntriples'
 require 'linkeddata'
 require 'fileutils'
 
+require_relative './lv2groups'
+
 #arguments: source_pd_patch destination_directory
 
 DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
@@ -37,7 +39,8 @@ DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
 @audioOutRegex = /#{@objRegex}outlet~\s*(.*?);\s*/
 
 @labelRegex = /label:\s*([\w-]*)/
-@groupRegex = /group:\s*([\w-]*)/
+@groupRegex = /group:\s*([\w:-]*)/
+@groupFormatRegex = /\A([\w-]*):([\w]*):([\w]*)\z/
 @floatRegex = /\d+(?:\.\d+)?/
 @rangeRegex = /range:\s+(#{@floatRegex})\s*(#{@floatRegex})\s*(#{@floatRegex})/
 
@@ -87,7 +90,12 @@ def get_audio_data(x, y, content)
     raise "audio inlets/outlets need to have a label"
   end
   if content =~ @groupRegex
-    data[:group] = $1
+    g = $1
+    if g =~ @groupFormatRegex
+    else
+      raise "#{g} not a valid group format: name:GroupClass:role"
+    end
+    data[:group] = {:name => $1, :type => $2, :member => $3}
   end
   return data
 end
@@ -107,6 +115,38 @@ end
 
 @subpatchOpen = /\A#N canvas \d+ \d+ \d+ \d+ (\w+).*?;/
 @subpatchClose = /\A#X restore \d+ \d+ pd (\w+).*?;/
+
+def test_and_extract_groups(audio_ports)
+  groups = {}
+
+  #find the groups
+  audio_ports.each do |p|
+    g = p[:group]
+    next unless g
+    name = g[:name]
+    type = g[:type]
+    member = g[:member]
+    raise "unsupported group type #{type}" unless LV2Groups::SUPPORTED[type]
+    raise "unsupported group #{type} member #{member}" unless LV2Groups::SUPPORTED[type][member]
+
+    groups[name] = {:type => type, :members => [], :dir => p[:dir]} unless groups[name]
+    raise "duplicate member #{member} in #{type} group #{name}" if groups[name][:members].include?(member)
+    raise "#{type} group #{name} has both in and out ports" if groups[name][:dir] != p[:dir]
+    groups[name][:members] << member
+  end
+
+  names = {}
+  #validate
+  groups.each do |name, data|
+    LV2Groups::SUPPORTED[data[:type]].each do |member, range|
+      unless data[:members].include?(member) or range.include?(0)
+        raise "group #{name} missing member of type #{member}"
+      end
+    end
+    names[name] = data[:type]
+  end
+  return names
+end
 
 def parse_pd_file(patch_path)
   audio_in = []
@@ -199,6 +239,13 @@ def parse_pd_file(patch_path)
     audio_in = audio_in.sort_by { |info| info[:x] }
     audio_out = audio_out.sort_by { |info| info[:x] }
 
+    begin
+      audio = audio_in.collect { |p| p.merge({:dir => :in}) } + audio_out.collect { |p| p.merge({:dir => :out}) }
+      outdata[:groups] = test_and_extract_groups(audio)
+    rescue => e
+      raise "problem with audio groups #{e}"
+    end
+
     outdata[:audio_in] = audio_in
     outdata[:audio_out] = audio_out
     outdata[:control_in] = in_controls if in_controls.size
@@ -219,7 +266,7 @@ end
 def audio_port_info(info, index, direction)
   l = info[:label]
   g = info[:group]
-  s = ((g ? g : direction.to_s) + "_" + l.gsub('-', '_')).downcase
+  s = ((g ? g[:name] : direction.to_s) + "_" + l.gsub('-', '_')).downcase
   return {:type => :audio, :dir => direction, :symbol => s, :label => l, :group => g}
 end
 
@@ -280,6 +327,7 @@ def print_plugin(data)
 end
 
 @lv2 = RDF::Vocabulary.new("http://lv2plug.in/ns/lv2core#")
+@pg = RDF::Vocabulary.new("http://ll-plugins.nongnu.org/lv2/ext/portgroups#")
 @doap = RDF::Vocabulary.new("http://usefulinc.com/ns/doap#")
 @atom = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/atom#")
 @midi = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/midi#")
@@ -298,6 +346,8 @@ def write_rdf(data, path)
   details_file = "details.ttl"
   manifest_file = "manifest.ttl"
 
+  group_name_to_uri = {}
+
   uri = RDF::URI.new(data[:uri])
 
   manifest = RDF::Graph.new
@@ -305,6 +355,13 @@ def write_rdf(data, path)
   manifest << [uri, RDF::RDFS.seeAlso, RDF::URI.new(details_file)]
 
   details = RDF::Graph.new
+
+  data[:groups].each do |name, type|
+    group_uri = RDF::URI.new(File.join(data[:uri], name))
+    group_name_to_uri[name] = group_uri
+    details << [group_uri, RDF.type, @pg[type.to_s]]
+  end
+
   details << [uri, RDF.type, @lv2.Plugin]
   details << [uri, @lv2.binary, RDF::URI.new(data[:binary])]
   details << [uri, @doap.name, data[:name]]
@@ -333,6 +390,13 @@ def write_rdf(data, path)
 
     details << [node, @lv2.symbol, p[:symbol]]
     details << [node, @lv2.name, p[:label]]
+
+    if p[:group]
+      group_node = RDF::Node.new
+      details << [node, @pg.membership, group_node]
+      details << [group_node, @pg.group, group_name_to_uri[p[:group][:name]]]
+      details << [group_node, @pg.role, @pg[p[:group][:member]]]
+    end
 
     if p[:range]
       details << [node, @lv2.minimum, p[:range][0]]
