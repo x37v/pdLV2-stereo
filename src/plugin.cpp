@@ -119,6 +119,12 @@ namespace {
   }
 
   void pd_floathook(const char *s, float value);
+  void pd_noteonhook(int channel, int pitch, int velocity);
+  void pd_controlchangehook(int channel, int controller, int value);
+  void pd_programchangehook(int channel, int value);
+  void pd_pitchbendhook(int channel, int value);
+  void pd_aftertouchhook(int channel, int value);
+  void pd_polyaftertouchhook(int channel, int pitch, int value);
 
   void with_lock(std::function<void()> func) {
     while (pd_global_lock.test_and_set(std::memory_order_acquire));  // spin, acquire lock
@@ -130,9 +136,6 @@ namespace {
 class PDLv2Plugin :
   public Plugin<PDLv2Plugin>
 {
-  private:
-    void float_message_callback(const char *source, float value) {
-    }
   public:
     PDLv2Plugin(double rate) : Plugin<PDLv2Plugin>(pdlv2::ports.size()) {
       const std::string plugin_bundle_path(bundle_path());
@@ -174,6 +177,12 @@ class PDLv2Plugin :
       }
 
       call_pd_ret_void<const t_libpd_floathook>(mLIBPDHandle, "libpd_set_floathook", &pd_floathook);
+      call_pd_ret_void<const t_libpd_noteonhook>(mLIBPDHandle, "libpd_set_noteonhook", &pd_noteonhook);
+      call_pd_ret_void<const t_libpd_controlchangehook>(mLIBPDHandle, "libpd_set_controlchangehook", &pd_controlchangehook);
+      call_pd_ret_void<const t_libpd_programchangehook>(mLIBPDHandle, "libpd_set_programchangehook", &pd_programchangehook);
+      call_pd_ret_void<const t_libpd_pitchbendhook>(mLIBPDHandle, "libpd_set_pitchbendhook", &pd_pitchbendhook);
+      call_pd_ret_void<const t_libpd_aftertouchhook>(mLIBPDHandle, "libpd_set_aftertouchhook", &pd_aftertouchhook);
+      call_pd_ret_void<const t_libpd_polyaftertouchhook>(mLIBPDHandle, "libpd_set_polyaftertouchhook", &pd_polyaftertouchhook);
 
       mPatchFileHandle = call_pd<void *, const char *, const char *>(mLIBPDHandle, "libpd_openfile", pdlv2::patch_file_name, plugin_bundle_path.c_str());
       mPDDollarZero = call_pd<int, void *>(mLIBPDHandle, "libpd_getdollarzero", mPatchFileHandle); // get dollarzero from patch
@@ -217,6 +226,32 @@ class PDLv2Plugin :
           *p(kv.first) = value;
           break;
         }
+      }
+    }
+
+    void process_noteon(int channel, int pitch, int velocity) {
+      for (auto& kv: mMIDIOut) {
+        LV2_Atom_Sequence* out = p<LV2_Atom_Sequence>(kv.first);
+      }
+    }
+    void process_cc(int channel, int controller, int value) {
+      for (auto& kv: mMIDIOut) {
+      }
+    }
+    void process_pgrmchg(int channel, int value) {
+      for (auto& kv: mMIDIOut) {
+      }
+    }
+    void process_bend(int channel, int value) {
+      for (auto& kv: mMIDIOut) {
+      }
+    }
+    void process_touch(int channel, int value) {
+      for (auto& kv: mMIDIOut) {
+      }
+    }
+    void process_poly_touch(int channel, int pitch, int value) {
+      for (auto& kv: mMIDIOut) {
       }
     }
 
@@ -345,6 +380,31 @@ namespace {
     if (current_plugin)
       current_plugin->process_float(std::string(s), value);
   }
+  void pd_noteonhook(int channel, int pitch, int velocity) {
+    if (current_plugin)
+      current_plugin->process_noteon(channel, pitch, velocity);
+  }
+  void pd_controlchangehook(int channel, int controller, int value) {
+    if (current_plugin)
+      current_plugin->process_cc(channel, controller, value);
+  }
+  void pd_programchangehook(int channel, int value) {
+    if (current_plugin)
+      current_plugin->process_pgrmchg(channel, value);
+  }
+  void pd_pitchbendhook(int channel, int value) {
+    if (current_plugin)
+      current_plugin->process_bend(channel, value);
+  }
+  void pd_aftertouchhook(int channel, int value) {
+    if (current_plugin)
+      current_plugin->process_touch(channel, value);
+  }
+  void pd_polyaftertouchhook(int channel, int pitch, int value) {
+    if (current_plugin)
+      current_plugin->process_poly_touch(channel, pitch, value);
+  }
+  //redundant? void pd_midibytehook(int port, int byte) { }
 }
 
 static int _ = PDLv2Plugin::register_class(pdlv2::plugin_uri);
