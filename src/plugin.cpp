@@ -245,6 +245,8 @@ class PDLv2Plugin :
 
     std::map<uint32_t, std::string> mControlIn;
     std::map<uint32_t, std::string> mControlOut;
+    std::map<uint32_t, std::string> mMIDIIn;
+    std::map<uint32_t, std::string> mMIDIOut;
     std::vector<uint32_t> mAudioIn;
     std::vector<uint32_t> mAudioOut;
     uint32_t mPDDollarZero = 0;
