@@ -11,6 +11,9 @@
 #include <functional>
 #include <fstream>
 #include <cstdio>
+#include <lv2/lv2plug.in/ns/ext/atom/atom.h>
+#include <lv2/lv2plug.in/ns/ext/atom/util.h>
+#include <lv2/lv2plug.in/ns/ext/midi/midi.h>
 
 #include "plugin.h"
 
@@ -18,6 +21,8 @@
 #define _GNU_SOURCE
 #endif
 #include <dlfcn.h>
+
+#define CHAN_MASK 0x07
 
 using namespace LV2;
 using std::cout;
@@ -187,6 +192,12 @@ class PDLv2Plugin :
             mControlOut[i] = std::to_string(mPDDollarZero) + "-lv2-" + info.name;
             call_pd<void*, const char *>(mLIBPDHandle, "libpd_bind", mControlOut[i].c_str());
             break;
+          case pdlv2::MIDI_OUT:
+            mMIDIOut[i] = info.name;
+            break;
+          case pdlv2::MIDI_IN:
+            mMIDIIn[i] = info.name;
+            break;
         }
       }
 
@@ -224,6 +235,11 @@ class PDLv2Plugin :
           call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", ctrl_name.c_str(), value);
         }
 
+        for (auto& kv: mMIDIIn) {
+          const LV2_Atom_Sequence* midibuf = p<LV2_Atom_Sequence>(kv.first);
+          handle_midi_in(midibuf);
+        }
+
         //XXX need to juggle between lv2 frames and pd blocks because libpd_process_raw expects nchannels * block_size length arrays
 
         //XXX pd block size has to be an equal divisor of nframes
@@ -241,6 +257,72 @@ class PDLv2Plugin :
         }
         current_plugin = nullptr;
       });
+    }
+
+    void handle_midi_in(const LV2_Atom_Sequence* midibuf) {
+      LV2_ATOM_SEQUENCE_FOREACH(midibuf, ev) {
+        //XXX if (ev->body.type == 
+        //the actual data is stored after the event
+        const uint8_t* const msg = (const uint8_t*)(ev + 1);
+        for (uint32_t i = 0; i < ev->body.size; i++) {
+          call_pd<int, int, int>(mLIBPDHandle, "libpd_midibyte", 0, static_cast<int>(msg[i]));
+        }
+        switch (lv2_midi_message_type(msg)) {
+          case LV2_MIDI_MSG_INVALID:
+            break;
+          case LV2_MIDI_MSG_NOTE_OFF:
+            call_pd<int, int, int, int>(mLIBPDHandle,
+                "libpd_noteon", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), 0);
+            break;
+          case LV2_MIDI_MSG_NOTE_ON:
+            call_pd<int, int, int, int>(mLIBPDHandle,
+                "libpd_noteon", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), static_cast<int>(msg[2]));
+            break;
+          case LV2_MIDI_MSG_NOTE_PRESSURE:
+            call_pd<int, int, int, int>(mLIBPDHandle,
+                "libpd_polyaftertouch", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), static_cast<int>(msg[2]));
+            break;
+          case LV2_MIDI_MSG_CONTROLLER:
+            call_pd<int, int, int, int>(mLIBPDHandle,
+                "libpd_controlchange", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), static_cast<int>(msg[2]));
+            break;
+          case LV2_MIDI_MSG_PGM_CHANGE:
+            call_pd<int, int, int>(mLIBPDHandle,
+                "libpd_programchange", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]));
+            break;
+          case LV2_MIDI_MSG_CHANNEL_PRESSURE:
+            call_pd<int, int, int>(mLIBPDHandle,
+                "libpd_aftertouch", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]));
+            break;
+          case LV2_MIDI_MSG_BENDER:
+            {
+              int value = ((static_cast<uint16_t>(msg[2]) << 7) | msg[1]) - 8192;
+              call_pd<int, int, int>(mLIBPDHandle,
+                  "libpd_pitchbend", static_cast<int>(CHAN_MASK & msg[0]), value);
+            }
+            break;
+          case LV2_MIDI_MSG_SYSTEM_EXCLUSIVE:
+            //XXX TODO
+            break;
+          case LV2_MIDI_MSG_MTC_QUARTER:
+            break;
+          case LV2_MIDI_MSG_SONG_POS:
+            break;
+          case LV2_MIDI_MSG_SONG_SELECT:
+            break;
+          case LV2_MIDI_MSG_TUNE_REQUEST:
+            break;
+          case LV2_MIDI_MSG_CLOCK:
+          case LV2_MIDI_MSG_START:
+          case LV2_MIDI_MSG_CONTINUE:
+          case LV2_MIDI_MSG_STOP:
+          case LV2_MIDI_MSG_ACTIVE_SENSE:
+          case LV2_MIDI_MSG_RESET:
+            call_pd<int, int, int>(mLIBPDHandle,
+                "libpd_sysrealtime", 0, static_cast<int>(msg[0]));
+            break;
+        }
+      }
     }
 
     std::map<uint32_t, std::string> mControlIn;
