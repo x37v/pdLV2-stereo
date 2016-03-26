@@ -332,6 +332,14 @@ end
 @atom = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/atom#")
 @midi = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/midi#")
 
+=begin
+
+#query for all the plugin types?
+g = RDF::Graph.load("/usr/lib/lv2/lv2core.lv2/lv2core.ttl")
+g.query([nil, RDF::URI.new("http://www.w3.org/2000/01/rdf-schema#subClassOf"), RDF::URI.new("http://lv2plug.in/ns/lv2core#Plugin")]).each { |s| puts s }
+
+=end
+
 @rdf_prefixes = {
   rdfs: "http://www.w3.org/2000/01/rdf-schema#",
   rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
