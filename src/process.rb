@@ -294,10 +294,6 @@ end
   midi: @midi.to_iri.to_s,
 }
 
-@rdf_prefixes.each do |k, v|
-  puts "#{k} => #{v}"
-end
-
 def write_rdf(data, path)
   details_file = "details.ttl"
   manifest_file = "manifest.ttl"
