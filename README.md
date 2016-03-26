@@ -94,6 +94,7 @@ Try multiple intances of libpd as a shared object?:
 TODO
 ----
 
+* use URID to get map of midi uri to make sure we're processing the correct events for input??
 * [validate](http://lv2plug.in/pages/validating-lv2-data.html)
 * allow specification of audio input and output names
 * allow for block sizes less than 64
