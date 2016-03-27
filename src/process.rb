@@ -152,6 +152,7 @@ def parse_pd_file(patch_path)
   audio_in = []
   audio_out = []
   name = nil
+  maintainer = nil
   uri = nil
   in_controls = []
   out_controls = []
@@ -213,6 +214,8 @@ def parse_pd_file(patch_path)
         name = $1
       elsif l =~ /#{@msgRegex}pluginLicense:\s(.*);\s*/
         license = $1
+      elsif l =~ /#{@msgRegex}pluginMaintainer:\s(.*);\s*/
+        maintainer = $1
       else
         PD_MIDI_OBJ[:in].each do |obname|
           in_midi << obname if l =~ /\A#X obj \d+ \d+ #{obname}/
@@ -236,6 +239,7 @@ def parse_pd_file(patch_path)
       :uri => uri,
       :license => license
     }
+    outdata[:maintainer] = maintainer if maintainer
     audio_in = audio_in.sort_by { |info| info[:x] }
     audio_out = audio_out.sort_by { |info| info[:x] }
 
@@ -331,6 +335,7 @@ end
 @doap = RDF::Vocabulary.new("http://usefulinc.com/ns/doap#")
 @atom = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/atom#")
 @midi = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/midi#")
+@foaf = RDF::Vocabulary.new("http://xmlns.com/foaf/0.1/")
 
 =begin
 
@@ -348,6 +353,8 @@ g.query([nil, RDF::URI.new("http://www.w3.org/2000/01/rdf-schema#subClassOf"), R
   doap: @doap.to_iri.to_s,
   atom: @atom.to_iri.to_s,
   midi: @midi.to_iri.to_s,
+  pg:   @pg.to_iri.to_s,
+  foaf: @foaf.to_iri.to_s,
 }
 
 def write_rdf(data, path)
@@ -364,16 +371,22 @@ def write_rdf(data, path)
 
   details = RDF::Graph.new
 
+  details << [uri, RDF.type, @lv2.Plugin]
+  details << [uri, @lv2.binary, RDF::URI.new(data[:binary])]
+  details << [uri, @doap.name, data[:name]]
+  details << [uri, @doap.license, RDF::URI.new(data[:license])]
+
+  if data[:maintainer]
+    node = RDF::Node.new
+    details << [uri, @doap.maintainer, node]
+    details << [node, @foaf.name, data[:maintainer]]
+  end
+
   data[:groups].each do |name, type|
     group_uri = RDF::URI.new(File.join(data[:uri], name))
     group_name_to_uri[name] = group_uri
     details << [group_uri, RDF.type, @pg[type.to_s]]
   end
-
-  details << [uri, RDF.type, @lv2.Plugin]
-  details << [uri, @lv2.binary, RDF::URI.new(data[:binary])]
-  details << [uri, @doap.name, data[:name]]
-  details << [uri, @doap.license, RDF::URI.new(data[:license])]
 
   ports(data).each_with_index do |p, i|
     node = RDF::Node.new
