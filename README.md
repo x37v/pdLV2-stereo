@@ -53,8 +53,9 @@ Workflow
     * the format is the same as the **receive** except it uses a **send** object
     * you can use the short form: [ **s** _$1-lv2-control_symbol_name_ ]
   * specify any audio inputs or outputs you want
-    * inputs use **inlet~ label:Outlet-Label group:Inlet-Group**
-    * outputs use **outlet~ label:Inlet-Label group:Outlet-Group**
+    * inputs use **inlet~ label:Outlet-Label group:GroupName:Type:MemberType**
+    * outputs use **outlet~ label:Inlet-Label group:GroupName:Type:MemberType**
+  * include midi in objects if you want a midi in port
   * include any abstractions in the same directory
 * **make**: to build all the plugins
   * this parses the pd file for all the info it needs to build the plugins
