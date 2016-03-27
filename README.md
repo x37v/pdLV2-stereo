@@ -37,26 +37,31 @@ Workflow
 ----
 * create your pd patch, save it as *plugins/\<plugin_name\>/plugin.pd*
   * check out the template patch as a reference
-  * specify, using messages:
+  * specify the plugin details using messages:
     * | **pluginURI**: *http://uniqueURI/for/your.plugin* (
     * | **pluginName**: *name of your plugin* (
-    * | **pluginLicense**: *http://rdf-uri/to/your/license/* (
+    * | **pluginLicense**: *http://rdf-uri/to/your/license* (
       * defaults to 'http://usefulinc.com/doap/licenses/gpl'
-  * specify control inputs with **receive** objects
+    * | **pluginMaintainer**: *Your Name* (
+  * specify control inputs and/or outputs you want
+    * inputs use **[receive]** or **[r]**
+    * outputs use **[send]** or **[s]**
     * format: [ **receive** *$1-lv2-control_symbol_name* **label:** *Control-Label* **range:** *0 0.5 1* ]
     * you can use the short form: [ **r** _$1-lv2-control_symbol_name_ ]
     * the symbol must be *$1-lv2-* followed by a valid c-identifier which defines the symbol that is used to identify the port
       * for example, *$1-lv2-balance* defines a port named *balance*
     * label cannot contain whitespace at this time
     * range specified by floats in the order: *minimum* *default* *maximum*
-  * specify control outputs with **send** objects
-    * the format is the same as the **receive** except it uses a **send** object
-    * you can use the short form: [ **s** _$1-lv2-control_symbol_name_ ]
-  * specify any audio inputs or outputs you want
-    * inputs use **inlet~ label:Label-Name group:GroupName:Type:MemberType**
+  * specify any audio inputs and/or outputs you want
+    * inputs use **[inlet~]**
+    * outputs use **[outlet~]**
+      * name them with a label or a group
+        * label:Label-Name
+        * group:GroupName:GroupType:MemberType
+      * you only need a label or a group, not both
+      * _GroupType_ and _MemberType_ are defined by lv2
       * for example [inlet~ label:Ducking-Input]
-      * for example [inlet~ group:Main:StereoGroup:rightChannel]
-    * outputs use **outlet~ label:Label-Name group:GroupName:Type:MemberType**
+      * for example [outlet~ group:Main:StereoGroup:rightChannel]
   * include midi in objects if you want a midi in port, can be in a subpatch but not
     an abstraction
     * notein
