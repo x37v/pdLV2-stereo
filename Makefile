@@ -8,6 +8,8 @@ PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
 LDFLAGS = -lpd -L/usr/local/lib `pkg-config --libs lv2-plugin` -ldl
 CXXFLAGS = -g -Wl,--no-as-needed -shared -fPIC -DPIC -Isrc/ -std=c++11 `pkg-config --cflags lv2-plugin`
+
+LIBPD_FLAGS = UTIL=true EXTRA=true
 LIBPD_SO = libpd/libs/libpd.so
 
 #make the headers stick around so we can inspect them
@@ -24,7 +26,7 @@ $(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb src/host.p
 	cp $(LIBPD_SO) $(dir $<)/* $(dir $@)
 
 $(LIBPD_SO):
-	cd libpd/ && make libpd
+	cd libpd/ && make libpd $(LIBPD_FLAGS)
 
 install: $(PLUGINS)
 	mkdir -p $(INSTALL_DIR)
