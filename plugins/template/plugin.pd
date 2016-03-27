@@ -17,24 +17,22 @@ value of 0.5, f 64;
 #X text 696 292 output called 'Test';
 #X text 467 76 controls use \$1-lv2 prefixed sends and receives;
 #X text 10 88 audio uses inlet~ and outlet~;
-#X obj 12 289 outlet~ label:Left group:Out:StereoGroup:leftChannel
-;
 #X text 30 328 outlet~/inlet~ label:LabeName;
 #X text 49 345 optional: group:Name:ClassName:MemberRole;
 #X text 50 360 the Name just uniquely identifies the group \, the ClassName
 is the group class \, like StereoGroup and the MemberRole identifies
 the member that this outlet or inlet is in the group \, like rightChannel
 ;
-#X obj 48 135 inlet~ label:Right group:In:StereoGroup:rightChannel
-;
-#X obj 13 113 inlet~ label:Left group:In:StereoGroup:leftChannel;
-#X obj 48 264 outlet~ label:Right group:Out:StereoGroup:rightChannel
-;
 #X msg 3 67 pluginMaintainer: xnor;
+#X obj 13 113 inlet~ group:In:StereoGroup:leftChannel;
+#X obj 48 135 inlet~ group:In:StereoGroup:rightChannel;
+#X obj 88 160 inlet~ label:Toast-Man;
+#X obj 48 264 outlet~ group:Out:StereoGroup:rightChannel;
+#X obj 12 289 outlet~ group:Out:StereoGroup:leftChannel;
 #X connect 2 0 0 0;
 #X connect 3 0 1 0;
 #X connect 3 0 9 0;
 #X connect 4 0 2 0;
 #X connect 5 0 3 0;
-#X connect 19 0 21 0;
-#X connect 20 0 15 0;
+#X connect 19 0 23 0;
+#X connect 20 0 22 0;

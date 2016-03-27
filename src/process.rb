@@ -84,11 +84,6 @@ end
 
 def get_audio_data(x, y, content)
   data = {:x => x.to_i}
-  if content =~ @labelRegex
-    data[:label] = $1
-  else
-    raise "audio inlets/outlets need to have a label"
-  end
   if content =~ @groupRegex
     g = $1
     if g =~ @groupFormatRegex
@@ -96,6 +91,13 @@ def get_audio_data(x, y, content)
       raise "#{g} not a valid group format: name:GroupClass:role"
     end
     data[:group] = {:name => $1, :type => $2, :member => $3}
+  end
+  if content =~ @labelRegex
+    data[:label] = $1
+  elsif data[:group]
+    data[:label] = data[:group][:name] + ":" + data[:group][:member]
+  else
+    raise "audio inlets/outlets need to have a label or group"
   end
   return data
 end
@@ -270,7 +272,7 @@ end
 def audio_port_info(info, index, direction)
   l = info[:label]
   g = info[:group]
-  s = ((g ? g[:name] : direction.to_s) + "_" + l.gsub('-', '_')).downcase
+  s = l.gsub('-', '_').gsub(":", "_").downcase
   return {:type => :audio, :dir => direction, :symbol => s, :label => l, :group => g}
 end
 
