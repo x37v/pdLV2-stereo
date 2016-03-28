@@ -44,37 +44,15 @@ namespace {
   }
 
 
-  template<typename R, typename T0>
-    R call_pd(void * library_handle, std::string func_name, T0 arg0) {
-      R (*ptr)(T0);
-      ptr = (R (*)(T0))dlsym(library_handle, func_name.c_str());
+  template<typename R, typename ...Args>
+    R call_pd(void * library_handle, std::string func_name, Args ...args) {
+      R (*ptr)(Args...);
+      ptr = (R (*)(Args...))dlsym(library_handle, func_name.c_str());
       if (!ptr) {
         cerr << "couldn't get function " << func_name << endl;
         return R();
       }
-      return (*ptr)(arg0);
-    }
-
-  template<typename R, typename T0, typename T1>
-    R call_pd(void * library_handle, std::string func_name, T0 arg0, T1 arg1) {
-      R (*ptr)(T0, T1);
-      ptr = (R (*)(T0, T1))dlsym(library_handle, func_name.c_str());
-      if (!ptr) {
-        cerr << "couldn't get function " << func_name << endl;
-        return R();
-      }
-      return (*ptr)(arg0, arg1);
-    }
-
-  template<typename R, typename T0, typename T1, typename T2>
-    R call_pd(void * library_handle, std::string func_name, T0 arg0, T1 arg1, T2 arg2) {
-      R (*ptr)(T0, T1, T2);
-      ptr = (R (*)(T0, T1, T2))dlsym(library_handle, func_name.c_str());
-      if (!ptr) {
-        cerr << "couldn't get function " << func_name << endl;
-        return R();
-      }
-      return (*ptr)(arg0, arg1, arg2);
+      return (*ptr)(std::forward<Args>(args)...);
     }
 
   template<typename R>
@@ -88,26 +66,15 @@ namespace {
       return (*ptr)();
     }
 
-  template<typename T0>
-    void call_pd_ret_void(void * library_handle, std::string func_name, T0 arg0) {
-      void (*ptr)(T0);
-      ptr = (void (*)(T0))dlsym(library_handle, func_name.c_str());
+  template<typename ...Args>
+    void call_pd_ret_void(void * library_handle, std::string func_name, Args ...args) {
+      void (*ptr)(Args...);
+      ptr = (void (*)(Args...))dlsym(library_handle, func_name.c_str());
       if (!ptr) {
         cerr << "couldn't get function " << func_name << endl;
         return;
       }
-      (*ptr)(arg0);
-    }
-
-  template<typename T0, typename T1>
-    void call_pd_ret_void(void * library_handle, std::string func_name, T0 arg0, T1 arg1) {
-      void (*ptr)(T0, T1);
-      ptr = (void (*)(T0, T1))dlsym(library_handle, func_name.c_str());
-      if (!ptr) {
-        cerr << "couldn't get function " << func_name << endl;
-        return;
-      }
-      (*ptr)(arg0, arg1);
+      (*ptr)(std::forward<Args>(args)...);
     }
 
   PDLv2Plugin * current_plugin = nullptr;
