@@ -96,9 +96,6 @@ References
 Debugging, dev
 ----
 
-Can consolidate the templates and pass arguments to function pointers with std::forward ?
-http://en.cppreference.com/w/cpp/utility/forward
-
 Try multiple intances of libpd as a shared object?:
 * http://stackoverflow.com/questions/1716472/using-libtool-to-load-a-duplicate-function-name-from-a-shared-library
 * http://stackoverflow.com/questions/1745975/load-multiple-copies-of-a-shared-library
@@ -109,6 +106,7 @@ Try multiple intances of libpd as a shared object?:
 TODO
 ----
 
+* consolidate libpd calls into a class and preload function pointers
 * use URID to get map of midi uri to make sure we're processing the correct events for input??
 * [validate](http://lv2plug.in/pages/validating-lv2-data.html)
 * allow for block sizes less than 64
