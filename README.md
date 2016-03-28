@@ -111,10 +111,9 @@ TODO
 
 * use URID to get map of midi uri to make sure we're processing the correct events for input??
 * [validate](http://lv2plug.in/pages/validating-lv2-data.html)
-* allow specification of audio input and output names
 * allow for block sizes less than 64
 * allow whitespace in control labels
 * [plugin category](http://www.nongnu.org/ll-plugins/lv2pftci/#More_metadata)
   * [reference](http://lv2plug.in/ns/lv2core/#sec-reference)
-* [port groups](http://ll-plugins.nongnu.org/lv2/ext/portgroups/)
-* [midi](http://lv2plug.in/ns/ext/midi#MidiEvent)
+* more [port groups](http://ll-plugins.nongnu.org/lv2/ext/portgroups/)
+* [midi out](http://lv2plug.in/ns/ext/midi#MidiEvent)
