@@ -91,12 +91,11 @@ def get_audio_data(x, y, content)
       raise "#{g} not a valid group format: name:GroupClass:role"
     end
     data[:group] = {:name => $1, :type => $2, :member => $3}
+    data[:label] = data[:group][:name] + ":" + data[:group][:member]
   end
   if content =~ @labelRegex
     data[:label] = $1
-  elsif data[:group]
-    data[:label] = data[:group][:name] + ":" + data[:group][:member]
-  else
+  elsif not data[:label]
     raise "audio inlets/outlets need to have a label or group"
   end
   return data
@@ -540,14 +539,19 @@ dest = ARGV[1]
 
 puts "source: #{source} dest #{dest}"
 
-begin
-  data = parse_pd_file(source)
-  #print_plugin(data)
-  data[:binary] = "pdlv2.so"
-  write_rdf(data, dest)
-  write_header(data, dest)
-  rewrite_host(data, "src/host.pd", dest)
-rescue => e
-  puts "problem parsing #{source} #{dest}:\n\t#{e}"
+data = parse_pd_file(source)
+
+#make sure we don't have duplicate port labels
+#XXX slow for long lists
+port_labels = ports(data).collect { |p| puts p[:label]; p[:label] }
+dups = port_labels.select{ |item| port_labels.count(item) > 1}.uniq
+if dups.size > 0
+  puts "duplicate port labels aren't allowed: #{dups.join(', ')}"
   exit -1
 end
+
+#print_plugin(data)
+data[:binary] = "pdlv2.so"
+write_rdf(data, dest)
+write_header(data, dest)
+rewrite_host(data, "src/host.pd", dest)
