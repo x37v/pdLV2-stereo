@@ -41,7 +41,7 @@ DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
 @labelRegex = /label:\s*([\w-]*)/
 @groupRegex = /group:\s*([\w:-]*)/
 @groupFormatRegex = /\A([\w-]*):([\w]*):([\w]*)\z/
-@floatRegex = /\d+(?:\.\d+)?/
+@floatRegex = /-?\d+(?:\.\d+)?/
 @rangeRegex = /range:\s+(#{@floatRegex})\s*(#{@floatRegex})\s*(#{@floatRegex})/
 
 PD_MIDI_OBJ = {
