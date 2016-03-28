@@ -543,7 +543,7 @@ data = parse_pd_file(source)
 
 #make sure we don't have duplicate port labels
 #XXX slow for long lists
-port_labels = ports(data).collect { |p| puts p[:label]; p[:label] }
+port_labels = ports(data).collect { |p| p[:label] }
 dups = port_labels.select{ |item| port_labels.count(item) > 1}.uniq
 if dups.size > 0
   puts "duplicate port labels aren't allowed: #{dups.join(', ')}"
