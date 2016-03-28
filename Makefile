@@ -23,7 +23,7 @@ $(BUILD_DIR)/pdlv2-%.lv2/pdlv2.so: $(BUILD_DIR)/pdlv2-%.lv2/plugin.h src/plugin.
 
 $(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb src/host.pd $(LIBPD_SO)
 	ruby src/process.rb $< $(dir $@)
-	cp $(LIBPD_SO) $(dir $<)/* $(dir $@)
+	cp -r $(LIBPD_SO) $(dir $<)/* $(dir $@)
 
 $(LIBPD_SO):
 	cd libpd/ && make libpd $(LIBPD_FLAGS)
