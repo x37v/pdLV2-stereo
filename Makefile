@@ -33,7 +33,7 @@ install: $(PLUGINS)
 	cp -r $(BUILD_DIR)/* $(INSTALL_DIR)
 
 test: install
-	jalv.gtk http://x37v.info/pdlv2/mididemoplugin.html
+	jalv.gtk http://x37v.info/pdlv2/djfilter.html
 
 clean:
 	rm -rf build
