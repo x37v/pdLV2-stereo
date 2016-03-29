@@ -7,7 +7,7 @@ HEADERS = $(addsuffix /plugin.h, $(BUILD_DIRS))
 PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
 LDFLAGS = -lpd -L/usr/local/lib `pkg-config --libs lv2-plugin` -ldl
-CXXFLAGS = -g -Wl,--no-as-needed -shared -fPIC -DPIC -Isrc/ -std=c++11 `pkg-config --cflags lv2-plugin`
+CXXFLAGS = -g -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 `pkg-config --cflags lv2-plugin`
 
 LIBPD_FLAGS = UTIL=true EXTRA=true
 LIBPD_SO = libpd/libs/libpd.so
@@ -33,7 +33,8 @@ install: $(PLUGINS)
 	cp -r $(BUILD_DIR)/* $(INSTALL_DIR)
 
 test: install
-	jalv.gtk http://x37v.info/pdlv2/djfilter.html
+	#jalv.gtk http://x37v.info/pdlv2/djfilter.html
+	jalv.gtk http://x37v.info/pdlv2/mididemoplugin.html
 
 clean:
 	rm -rf build
