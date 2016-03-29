@@ -11,7 +11,9 @@
 #include <functional>
 #include <fstream>
 #include <cstdio>
+
 #include <lv2/lv2plug.in/ns/ext/atom/atom.h>
+#include <lv2/lv2plug.in/ns/ext/atom/forge.h>
 #include <lv2/lv2plug.in/ns/ext/atom/util.h>
 #include <lv2/lv2plug.in/ns/ext/midi/midi.h>
 
@@ -170,7 +172,8 @@ class PDLv2Plugin :
             call_pd<void*, const char *>(mLIBPDHandle, "libpd_bind", mControlOut[i].c_str());
             break;
           case pdlv2::MIDI_OUT:
-            mMIDIOut[i] = info.name;
+            mMIDIOut[i] = midi_out_data_t();
+            lv2_atom_forge_init(&mMIDIOut[i].forge, urid_map_handle());
             break;
           case pdlv2::MIDI_IN:
             mMIDIIn[i] = info.name;
@@ -180,12 +183,26 @@ class PDLv2Plugin :
 
       mPDInputBuffer.resize(mPDBlockSize * mAudioIn.size());
       mPDOutputBuffer.resize(mPDBlockSize * mAudioOut.size());
+
     }
 
     virtual ~PDLv2Plugin() {
       call_pd_ret_void<void *>(mLIBPDHandle, "libpd_closefile", mPatchFileHandle);
       dlclose(mLIBPDHandle);
       std::remove(mLIBPDUniquePath.c_str());
+    }
+
+    template<std::size_t SIZE>
+    void handle_midi_out(std::array<uint8_t, SIZE> midi_bytes) {
+      for (auto& kv: mMIDIOut) {
+        LV2_Atom_Sequence* midibuf = p<LV2_Atom_Sequence>(kv.first);
+        uint32_t capacity = midibuf->atom.size;
+
+        lv2_atom_forge_frame_time(&kv.second.forge, mFrameTime);
+        lv2_atom_forge_atom(&kv.second.forge, SIZE, mIds.midi_event);
+        lv2_atom_forge_raw(&kv.second.forge, &midi_bytes.front(), SIZE);
+        lv2_atom_forge_pad(&kv.second.forge, SIZE);
+      }
     }
 
     void process_float(std::string prefix, float value) {
@@ -198,29 +215,50 @@ class PDLv2Plugin :
     }
 
     void process_noteon(int channel, int pitch, int velocity) {
-      for (auto& kv: mMIDIOut) {
-        LV2_Atom_Sequence* out = p<LV2_Atom_Sequence>(kv.first);
-      }
+      std::array<uint8_t, 3> params = {
+        LV2_MIDI_MSG_NOTE_ON | static_cast<uint8_t>(channel) & 0x07,
+        static_cast<uint8_t>(pitch) & 0x7F,
+        static_cast<uint8_t>(velocity) & 0x7F
+      };
+      handle_midi_out(params);
     }
     void process_cc(int channel, int controller, int value) {
-      for (auto& kv: mMIDIOut) {
-      }
+      std::array<uint8_t, 3> params = {
+        LV2_MIDI_MSG_CONTROLLER | static_cast<uint8_t>(channel) & 0x07,
+        static_cast<uint8_t>(controller) & 0x7F,
+        static_cast<uint8_t>(value) & 0x7F
+      };
+      handle_midi_out(params);
     }
     void process_pgrmchg(int channel, int value) {
-      for (auto& kv: mMIDIOut) {
-      }
+      std::array<uint8_t, 2> params = {
+        LV2_MIDI_MSG_PGM_CHANGE | static_cast<uint8_t>(channel) & 0x07,
+        static_cast<uint8_t>(value) & 0x7F
+      };
+      handle_midi_out(params);
     }
     void process_bend(int channel, int value) {
-      for (auto& kv: mMIDIOut) {
-      }
+      std::array<uint8_t, 3> params = {
+        LV2_MIDI_MSG_CONTROLLER | static_cast<uint8_t>(channel) & 0x07,
+        static_cast<uint8_t>(value) & 0x7F,
+        static_cast<uint8_t>(value >> 7) & 0x7F
+      };
+      handle_midi_out(params);
     }
     void process_touch(int channel, int value) {
-      for (auto& kv: mMIDIOut) {
-      }
+      std::array<uint8_t, 2> params = {
+        LV2_MIDI_MSG_CHANNEL_PRESSURE | static_cast<uint8_t>(channel) & 0x07,
+        static_cast<uint8_t>(value) & 0x7F
+      };
+      handle_midi_out(params);
     }
     void process_poly_touch(int channel, int pitch, int value) {
-      for (auto& kv: mMIDIOut) {
-      }
+      std::array<uint8_t, 3> params = {
+        LV2_MIDI_MSG_NOTE_PRESSURE | static_cast<uint8_t>(channel) & 0x07,
+        static_cast<uint8_t>(pitch) & 0x7F,
+        static_cast<uint8_t>(value) & 0x7F
+      };
+      handle_midi_out(params);
     }
 
     void activate() {
@@ -232,8 +270,10 @@ class PDLv2Plugin :
     }
 
     void run(uint32_t nframes) {
+      mFrameTime = 0;
       with_lock([this, nframes] () {
         current_plugin = this; //for floathook
+        setup_midi_out();
         for (auto& kv: mControlIn) {
           std::string ctrl_name = kv.second;
           float value = *p(kv.first);
@@ -259,9 +299,27 @@ class PDLv2Plugin :
 
           for (uint32_t c = 0; c < mAudioOut.size(); c++)
             memcpy(p(mAudioOut[c]) + i, out_buf + c * mPDBlockSize, mPDBlockSize * sizeof(float));
+          mFrameTime = i;
         }
+        complete_midi_out();
         current_plugin = nullptr;
       });
+    }
+
+    void setup_midi_out() {
+      for (auto& kv: mMIDIOut) {
+        LV2_Atom_Sequence* midibuf = p<LV2_Atom_Sequence>(kv.first);
+        uint32_t capacity = midibuf->atom.size;
+
+        lv2_atom_forge_set_buffer(&kv.second.forge, (uint8_t *)midibuf, capacity);
+        lv2_atom_forge_sequence_head(&kv.second.forge, &kv.second.frame, 0);
+      }
+    }
+
+    void complete_midi_out() {
+      for (auto& kv: mMIDIOut) {
+        lv2_atom_forge_pop(&kv.second.forge, &kv.second.frame);
+      }
     }
 
     void handle_midi_in(const LV2_Atom_Sequence* midibuf) {
@@ -331,10 +389,16 @@ class PDLv2Plugin :
       }
     }
 
+    struct midi_out_data_t {
+      LV2_Atom_Forge_Frame frame;
+      LV2_Atom_Forge forge;
+    };
+    //time within the current processing frame.. used for event offsets
+    int64_t mFrameTime = 0;
     std::map<uint32_t, std::string> mControlIn;
     std::map<uint32_t, std::string> mControlOut;
     std::map<uint32_t, std::string> mMIDIIn;
-    std::map<uint32_t, std::string> mMIDIOut;
+    std::map<uint32_t, midi_out_data_t> mMIDIOut;
     std::vector<uint32_t> mAudioIn;
     std::vector<uint32_t> mAudioOut;
     uint32_t mPDDollarZero = 0;
