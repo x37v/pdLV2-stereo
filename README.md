@@ -30,7 +30,7 @@ Install these:
   * run: **bundle install** from the top project directory
 
 You'll also need a c++ compiler and **make**
-* install **build-essential** on debian systems
+* install **build-essential** on debian based systems
 
 
 Workflow
