@@ -114,7 +114,6 @@ TODO
 ----
 
 * consolidate libpd calls into a class and preload function pointers
-* use URID to get map of midi uri to make sure we're processing the correct events for input??
 * [validate](http://lv2plug.in/pages/validating-lv2-data.html)
 * allow for block sizes less than 64
 * allow whitespace in control labels
