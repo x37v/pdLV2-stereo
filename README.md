@@ -20,10 +20,10 @@ Only works on Linux as far as I know
 Install these:
 * [Pure Data](http://msp.ucsd.edu/software.html) can use package manager
 * [libpd](https://github.com/libpd/libpd)
-	* included as a submodule so just run the following then the make process should work
-	* _git submodule init_
-	* _git submodule update_
-	* then do the same in the _libpd_ directory
+  * included as a submodule so just run the following then the make process should work
+  * _git submodule init_
+  * _git submodule update_
+  * then do the same in the _libpd_ directory
 * [lv2-c++-tools](http://www.nongnu.org/ll-plugins/hacking.html) can use package manager
 * [ruby](https://www.ruby-lang.org) use package manager or rvm
 * [bundler](http://bundler.io/) gem or package manager
@@ -62,14 +62,21 @@ Workflow
       * _GroupType_ and _MemberType_ are defined by lv2
       * for example [inlet~ label:Ducking-Input]
       * for example [outlet~ group:Main:StereoGroup:rightChannel]
-  * include midi in objects if you want a midi in port, can be in a subpatch but not
-    an abstraction
-    * notein
-    * ctlin
-    * pgmin
-    * bendin
-    * touchin
-    * polytouchin
+  * include midi objects if you want a midi in or out ports, can be in a subpatch but not an abstraction
+    * for input:
+      * notein
+      * ctlin
+      * pgmin
+      * bendin
+      * touchin
+      * polytouchin
+    * for output:
+      * noteout
+      * ctlout
+      * pgmout
+      * bendout
+      * touchout
+      * polytouchout
   * include any abstractions in the same directory
 * **make**: to build all the plugins
   * this parses the pd file for all the info it needs to build the plugins
@@ -114,4 +121,3 @@ TODO
 * [plugin category](http://www.nongnu.org/ll-plugins/lv2pftci/#More_metadata)
   * [reference](http://lv2plug.in/ns/lv2core/#sec-reference)
 * more [port groups](http://ll-plugins.nongnu.org/lv2/ext/portgroups/)
-* [midi out](http://lv2plug.in/ns/ext/midi#MidiEvent)
