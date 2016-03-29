@@ -30,16 +30,19 @@ struct URID {
     static void handle_feature(void* instance, void* data) {
       Derived* d = reinterpret_cast<Derived*>(instance);
       I<Derived>* fe = static_cast<I<Derived>*>(d);
-      fe->m_map = (LV2_URID_Map*)data;
-      fe->m_ok = fe->m_map != NULL;
+      fe->m_urid_map = (LV2_URID_Map*)data;
+      fe->m_ok = fe->m_urid_map != NULL;
     }
 
    protected:
-    LV2_URID_Map* m_map = nullptr;
     LV2_URID map_uri(const char* uri) {
-      if (m_map == nullptr) return 0;
-      return m_map->map(m_map->handle, uri);
+      if (m_urid_map == nullptr)
+        return 0;
+      return m_urid_map->map(m_urid_map->handle, uri);
     }
+    LV2_URID_Map* urid_map_handle() const { return m_urid_map; }
+   private:
+    LV2_URID_Map* m_urid_map = nullptr;
   };
 };
 }
