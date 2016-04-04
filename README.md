@@ -131,5 +131,4 @@ TODO
 * allow whitespace in control labels
 * [plugin category](http://www.nongnu.org/ll-plugins/lv2pftci/#More_metadata)
   * [reference](http://lv2plug.in/ns/lv2core/#sec-reference)
-* more [port groups](http://ll-plugins.nongnu.org/lv2/ext/portgroups/)
 * support a custom GUI
