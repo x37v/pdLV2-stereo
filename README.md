@@ -5,6 +5,8 @@ Makes simple [Pure Data (aka pd)](http://msp.ucsd.edu/software.html) patches usa
 
 It supports audio, control and midi in and out.
 
+Currently there is no GUI, just what your host can provide.
+
 Linux only at the moment.
 
 NOTE
