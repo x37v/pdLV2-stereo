@@ -376,6 +376,7 @@ def write_rdf(data, path)
   details << [uri, @lv2.binary, RDF::URI.new(data[:binary])]
   details << [uri, @doap.name, data[:name]]
   details << [uri, @doap.license, RDF::URI.new(data[:license])]
+  details << [uri, @lv2.requiredFeature, RDF::URI.new("http://lv2plug.in/ns/ext/urid#map")]
 
   if data[:maintainer]
     node = RDF::Node.new
