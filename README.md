@@ -3,6 +3,8 @@ pdlv2
 
 Makes simple [Pure Data (aka pd)](http://msp.ucsd.edu/software.html) patches usable as [LV2 plugins](http://lv2plug.in/) utilizing [libpd](https://github.com/libpd/libpd) and [lv2-c++-tools](http://www.nongnu.org/ll-plugins/hacking.html)
 
+It supports audio, control and midi in and out.
+
 Linux only at the moment.
 
 NOTE
