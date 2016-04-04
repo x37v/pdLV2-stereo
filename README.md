@@ -35,6 +35,19 @@ You'll also need a c++ compiler and **make**
 
 Workflow
 ----
+
+### Short version:
+
+* Install all the stuff in the **requirements** above
+* Copy the entire **plugins/template/** directory to a new directory in **plugins/**
+  * For example *plugins/myawesomeplugin*
+* Use *Pure Data* to customize the **plugin.pd** file in that new directory
+  * In the above example run: *pd plugins/myawesomeplugin/plugin.pd*
+* Run **make install** from the top level of the project
+* **done**
+
+### Long version:
+
 * create your pd patch, save it as *plugins/\<plugin_name\>/plugin.pd*
   * check out the template patch as a reference
   * specify the plugin details using messages:
