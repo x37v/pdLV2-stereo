@@ -23,11 +23,13 @@ require 'rdf/ntriples'
 require 'linkeddata'
 require 'fileutils'
 
-require_relative './lv2groups'
+require_relative './lv2'
 
 #arguments: source_pd_patch destination_directory
 
 DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
+
+@lv2 = LV2.new
 
 @objRegex = /#X obj (\d+) (\d+)\s+/ #obj x y
 @msgRegex = /#X msg \d+ \d+\s+/
@@ -127,8 +129,9 @@ def test_and_extract_groups(audio_ports)
     name = g[:name]
     type = g[:type]
     member = g[:member]
-    raise "unsupported group type #{type}" unless LV2Groups::SUPPORTED[type]
-    raise "unsupported group #{type} member #{member}" unless LV2Groups::SUPPORTED[type][member]
+
+    raise "unsupported group type #{type}" unless @lv2.group_supported(type)
+    raise "unsupported group #{type} member #{member}" unless @lv2.group_member_supported(type, member)
 
     groups[name] = {:type => type, :members => [], :dir => p[:dir]} unless groups[name]
     raise "duplicate member #{member} in #{type} group #{name}" if groups[name][:members].include?(member)
@@ -137,13 +140,10 @@ def test_and_extract_groups(audio_ports)
   end
 
   names = {}
+
   #validate
   groups.each do |name, data|
-    LV2Groups::SUPPORTED[data[:type]].each do |member, range|
-      unless data[:members].include?(member) or range.include?(0)
-        raise "group #{name} missing member of type #{member}"
-      end
-    end
+    @lv2.group_validate(data[:type], data[:members])
     names[name] = data[:type]
   end
   return names
@@ -196,14 +196,14 @@ def parse_pd_file(patch_path)
         begin
           audio_out << get_audio_data($1, $2, $3)
         rescue => e
-          raise "problem with #{l} #{e}"
+          raise "\n\nproblem with #{l}\n#{e}\n"
         end
       elsif l =~ @audioInRegex
         next if in_subpatch #don't do inlet~ or outlet~ in subpatch
         begin
           audio_in << get_audio_data($1, $2, $3)
         rescue => e
-          raise "problem with #{l}\n#{e}"
+          raise "\n\nproblem with #{l}\n#{e}\n"
         end
       elsif l =~ @controlInRegex
         in_controls << get_control_data($3)
@@ -248,7 +248,7 @@ def parse_pd_file(patch_path)
       audio = audio_in.collect { |p| p.merge({:dir => :in}) } + audio_out.collect { |p| p.merge({:dir => :out}) }
       outdata[:groups] = test_and_extract_groups(audio)
     rescue => e
-      raise "problem with audio groups #{e}"
+      raise "\n\nproblem with audio groups:\n #{e}\n\n"
     end
 
     outdata[:audio_in] = audio_in
@@ -331,8 +331,8 @@ def print_plugin(data)
   end
 end
 
-@lv2 = RDF::Vocabulary.new("http://lv2plug.in/ns/lv2core#")
-@pg = RDF::Vocabulary.new("http://ll-plugins.nongnu.org/lv2/ext/portgroups#")
+@lv2Prefix = RDF::Vocabulary.new("http://lv2plug.in/ns/lv2core#")
+@pg = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/port-groups#")
 @doap = RDF::Vocabulary.new("http://usefulinc.com/ns/doap#")
 @atom = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/atom#")
 @midi = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/midi#")
@@ -350,7 +350,7 @@ g.query([nil, RDF::URI.new("http://www.w3.org/2000/01/rdf-schema#subClassOf"), R
   rdfs: "http://www.w3.org/2000/01/rdf-schema#",
   rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
   xsd:  "http://www.w3.org/2001/XMLSchema#",
-  lv2:  @lv2.to_iri.to_s,
+  lv2:  @lv2Prefix.to_iri.to_s,
   doap: @doap.to_iri.to_s,
   atom: @atom.to_iri.to_s,
   midi: @midi.to_iri.to_s,
@@ -367,16 +367,16 @@ def write_rdf(data, path)
   uri = RDF::URI.new(data[:uri])
 
   manifest = RDF::Graph.new
-  manifest << [uri, RDF.type, @lv2.Plugin]
+  manifest << [uri, RDF.type, @lv2Prefix.Plugin]
   manifest << [uri, RDF::RDFS.seeAlso, RDF::URI.new(details_file)]
 
   details = RDF::Graph.new
 
-  details << [uri, RDF.type, @lv2.Plugin]
-  details << [uri, @lv2.binary, RDF::URI.new(data[:binary])]
+  details << [uri, RDF.type, @lv2Prefix.Plugin]
+  details << [uri, @lv2Prefix.binary, RDF::URI.new(data[:binary])]
   details << [uri, @doap.name, data[:name]]
   details << [uri, @doap.license, RDF::URI.new(data[:license])]
-  details << [uri, @lv2.requiredFeature, RDF::URI.new("http://lv2plug.in/ns/ext/urid#map")]
+  details << [uri, @lv2Prefix.requiredFeature, RDF::URI.new("http://lv2plug.in/ns/ext/urid#map")]
 
   if data[:maintainer]
     node = RDF::Node.new
@@ -392,37 +392,37 @@ def write_rdf(data, path)
 
   ports(data).each_with_index do |p, i|
     node = RDF::Node.new
-    details << [uri, @lv2.port, node]
-    details << [node, @lv2.index, i]
+    details << [uri, @lv2Prefix.port, node]
+    details << [node, @lv2Prefix.index, i]
 
     if p[:type] == :midi
       details << [node, RDF.type, @atom.AtomPort]
       details << [node, @atom.bufferType, @atom.Sequence]
       details << [node, @atom.supports, @midi.MidiEvent]
-      details << [node, @lv2.designation, @lv2.control]
+      details << [node, @lv2Prefix.designation, @lv2Prefix.control]
     elsif p[:type] == :audio 
-      details << [node, RDF.type, @lv2.AudioPort]
+      details << [node, RDF.type, @lv2Prefix.AudioPort]
     elsif p[:type] == :control 
-      details << [node, RDF.type, @lv2.ControlPort]
+      details << [node, RDF.type, @lv2Prefix.ControlPort]
     else
       raise "#{p[:type]} is not a supported pdlv2 port type"
     end
 
-    details << [node, RDF.type, @lv2.InputPort] if p[:dir] == :in
-    details << [node, RDF.type, @lv2.OutputPort] if p[:dir] == :out
+    details << [node, RDF.type, @lv2Prefix.InputPort] if p[:dir] == :in
+    details << [node, RDF.type, @lv2Prefix.OutputPort] if p[:dir] == :out
 
-    details << [node, @lv2.symbol, p[:symbol]]
-    details << [node, @lv2.name, p[:label]]
+    details << [node, @lv2Prefix.symbol, p[:symbol]]
+    details << [node, @lv2Prefix.name, p[:label]]
 
     if p[:group]
       details << [node, @pg.group, group_name_to_uri[p[:group][:name]]]
-      details << [node, @lv2.designation, @pg[p[:group][:member]]]
+      details << [node, @lv2Prefix.designation, @pg[p[:group][:member]]]
     end
 
     if p[:range]
-      details << [node, @lv2.minimum, p[:range][0]]
-      details << [node, @lv2.maximum, p[:range][2]]
-      details << [node, @lv2.default, p[:range][1]]
+      details << [node, @lv2Prefix.minimum, p[:range][0]]
+      details << [node, @lv2Prefix.maximum, p[:range][2]]
+      details << [node, @lv2Prefix.default, p[:range][1]]
     end
   end
 

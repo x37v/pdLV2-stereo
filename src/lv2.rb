@@ -6,6 +6,7 @@ require 'rdf/ntriples'
 
 class LV2
   attr_accessor :lv2_include_dir
+  attr_reader :port_groups_uri
   attr_reader :port_groups
   attr_reader :plugin_classes
 
@@ -14,8 +15,10 @@ class LV2
 
     @rdf_subclass = RDF::URI.new("http://www.w3.org/2000/01/rdf-schema#subClassOf")
 
+    @port_groups_uri = RDF::URI.new("http://lv2plug.in/ns/ext/port-groups#")
+
     @lv2  = RDF::Vocabulary.new("http://lv2plug.in/ns/lv2core#")
-    @pg   = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/port-groups#")
+    @pg   = RDF::Vocabulary.new(@port_groups_uri)
     @doap = RDF::Vocabulary.new("http://usefulinc.com/ns/doap#")
     @atom = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/atom#")
     @midi = RDF::Vocabulary.new("http://lv2plug.in/ns/ext/midi#")
@@ -23,6 +26,39 @@ class LV2
 
     @plugin_classes = get_plugin_classes
     @port_groups = get_port_groups
+  end
+
+  def group_supported(group_name)
+    @port_groups.each do |g, members|
+      return true if g.to_s.sub(@port_groups_uri, "") == group_name
+    end
+    return false
+  end
+
+  def group_member_supported(group_name, group_member)
+    @port_groups.each do |g, members|
+      if g.to_s.sub(@port_groups_uri, "") == group_name
+        members.each do |m|
+          return true if m.to_s.sub(@port_groups_uri, "") == group_member
+        end
+        return false
+      end
+    end
+    return false
+  end
+
+  def group_validate(group_name, group_members)
+    @port_groups.each do |g, members|
+      if g.to_s.sub(@port_groups_uri, "") == group_name
+        members.each do |m|
+          m = m.to_s.sub(@port_groups_uri, "")
+          unless group_members.include?(m)
+            raise "group #{group_name} missing member #{m}"
+          end
+        end
+      end
+    end
+    return true
   end
 
   private
@@ -73,13 +109,15 @@ class LV2
   end
 end
 
-x = LV2.new
-puts x.lv2_include_dir
+=begin
+  x = LV2.new
+  puts x.lv2_include_dir
 
-puts "\nGROUPS:"
-x.port_groups.each do |name, elements|
-  puts "#{name} => #{elements.join(', ')}"
-end
+  puts "\nGROUPS:"
+  x.port_groups.each do |name, elements|
+    puts "#{name} => #{elements.join(', ')}"
+  end
 
-puts "\nCLASSES:"
-puts x.plugin_classes.join("\n")
+  puts "\nCLASSES:"
+  puts x.plugin_classes.join("\n")
+=end
