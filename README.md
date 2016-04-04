@@ -123,6 +123,7 @@ Debugging, dev
 TODO
 ----
 
+* support externals
 * ditch temp file plugin loading when libpd has real multi-instance support
 * consolidate libpd calls into a class and preload function pointers
 * [validate](http://lv2plug.in/pages/validating-lv2-data.html)
