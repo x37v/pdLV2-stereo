@@ -103,9 +103,6 @@ References
 Debugging, dev
 ----
 
-Try multiple intances of libpd as a shared object?:
-* http://stackoverflow.com/questions/1716472/using-libtool-to-load-a-duplicate-function-name-from-a-shared-library
-* http://stackoverflow.com/questions/1745975/load-multiple-copies-of-a-shared-library
 * carla --gdb for testing with multiple plugins at a time.. though my version doesn't seem to invoke gdb
 * jalv.. how do we run it in GDB and load our plugin's symbols?
 
@@ -113,6 +110,7 @@ Try multiple intances of libpd as a shared object?:
 TODO
 ----
 
+* ditch temp file plugin loading when libpd has real multi-instance support
 * consolidate libpd calls into a class and preload function pointers
 * [validate](http://lv2plug.in/pages/validating-lv2-data.html)
 * allow for block sizes less than 64
