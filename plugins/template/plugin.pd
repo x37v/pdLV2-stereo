@@ -21,14 +21,14 @@ value of 0.5, f 64;
 #X text 49 345 optional: group:Name:ClassName:MemberRole;
 #X text 50 360 the Name just uniquely identifies the group \, the ClassName
 is the group class \, like StereoGroup and the MemberRole identifies
-the member that this outlet or inlet is in the group \, like rightChannel
+the member that this outlet or inlet is in the group \, like right
 ;
 #X msg 3 67 pluginMaintainer: xnor;
-#X obj 13 113 inlet~ group:In:StereoGroup:leftChannel;
-#X obj 48 135 inlet~ group:In:StereoGroup:rightChannel;
+#X obj 13 113 inlet~ group:In:StereoGroup:left;
+#X obj 48 135 inlet~ group:In:StereoGroup:right;
 #X obj 88 160 inlet~ label:Toast-Man;
-#X obj 48 264 outlet~ group:Out:StereoGroup:rightChannel;
-#X obj 12 289 outlet~ group:Out:StereoGroup:leftChannel;
+#X obj 48 264 outlet~ group:Out:StereoGroup:right;
+#X obj 12 289 outlet~ group:Out:StereoGroup:left;
 #X connect 2 0 0 0;
 #X connect 3 0 1 0;
 #X connect 3 0 9 0;

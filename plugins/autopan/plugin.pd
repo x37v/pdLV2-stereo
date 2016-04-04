@@ -1,7 +1,7 @@
 #N canvas 1922 51 1916 1027 10;
 #X msg 3 47 pluginMaintainer: xnor;
-#X obj 95 339 outlet~ group:Out:StereoGroup:rightChannel;
-#X obj 58 366 outlet~ group:Out:StereoGroup:leftChannel;
+#X obj 95 339 outlet~ group:Out:StereoGroup:right;
+#X obj 58 366 outlet~ group:Out:StereoGroup:left;
 #X msg 3 26 pluginName: Auto-Panner;
 #X obj 28 88 inlet~ label:Input;
 #X obj 83 177 /;

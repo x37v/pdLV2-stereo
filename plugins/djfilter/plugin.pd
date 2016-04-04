@@ -1,9 +1,9 @@
 #N canvas 1920 30 1916 1027 10;
 #X msg 3 47 pluginMaintainer: xnor;
-#X obj 13 113 inlet~ group:In:StereoGroup:leftChannel;
-#X obj 67 136 inlet~ group:In:StereoGroup:rightChannel;
-#X obj 163 623 outlet~ group:Out:StereoGroup:rightChannel;
-#X obj 78 647 outlet~ group:Out:StereoGroup:leftChannel;
+#X obj 13 113 inlet~ group:In:StereoGroup:left;
+#X obj 67 136 inlet~ group:In:StereoGroup:right;
+#X obj 163 623 outlet~ group:Out:StereoGroup:right;
+#X obj 78 647 outlet~ group:Out:StereoGroup:left;
 #X obj 262 372 rjlib/u_highpassq;
 #X obj 159 372 rjlib/u_lowpassq;
 #X obj 370 254 loadbang;

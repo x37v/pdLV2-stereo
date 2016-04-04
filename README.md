@@ -74,7 +74,7 @@ Workflow
       * you only need a label or a group, not both
       * _GroupType_ and _MemberType_ are defined by lv2
       * for example [inlet~ label:Ducking-Input]
-      * for example [outlet~ group:Main:StereoGroup:rightChannel]
+      * for example [outlet~ group:Main:StereoGroup:right]
   * include midi objects if you want a midi in or out ports, can be in a subpatch but not an abstraction
     * for input:
       * notein

@@ -414,10 +414,8 @@ def write_rdf(data, path)
     details << [node, @lv2.name, p[:label]]
 
     if p[:group]
-      group_node = RDF::Node.new
-      details << [node, @pg.membership, group_node]
-      details << [group_node, @pg.group, group_name_to_uri[p[:group][:name]]]
-      details << [group_node, @pg.role, @pg[p[:group][:member]]]
+      details << [node, @pg.group, group_name_to_uri[p[:group][:name]]]
+      details << [node, @lv2.designation, @pg[p[:group][:member]]]
     end
 
     if p[:range]

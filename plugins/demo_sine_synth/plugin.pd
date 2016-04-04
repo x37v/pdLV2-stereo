@@ -92,9 +92,9 @@ OF THIS SOFTWARE.;
 #X obj 57 324 print;
 #X text 27 415 2;
 #X text 486 32 3;
-#X obj 473 416 outlet~ group:Out:StereoGroup:leftChannel label:left
+#X obj 473 416 outlet~ group:Out:StereoGroup:left label:left
 ;
-#X obj 655 388 outlet~ group:Out:StereoGroup:rightChannel label:right
+#X obj 655 388 outlet~ group:Out:StereoGroup:right label:right
 ;
 #X connect 0 0 38 0;
 #X connect 1 0 2 0;
