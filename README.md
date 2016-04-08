@@ -127,6 +127,7 @@ Debugging, dev
 TODO
 ----
 
+* check out/use? https://github.com/lvtk/lvtk
 * support externals
 * ditch temp file plugin loading when libpd has real multi-instance support
 * consolidate libpd calls into a class and preload function pointers
