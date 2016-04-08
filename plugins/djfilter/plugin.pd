@@ -1,4 +1,4 @@
-#N canvas 1920 30 1916 1027 10;
+#N canvas 0 30 1351 708 10;
 #X msg 3 47 pluginMaintainer: xnor;
 #X obj 13 113 inlet~ group:In:StereoGroup:left;
 #X obj 67 136 inlet~ group:In:StereoGroup:right;
@@ -35,6 +35,9 @@
 #X obj 326 36 loadbang;
 #X obj 14 388 *~ 0.8;
 #X obj 66 387 *~ 0.8;
+#X text 486 22 1 Control 'dj' style filter \, at the center it does
+nothing \, to the left it low pass filteres the input \, to the right
+it high pass filters the input.;
 #X connect 1 0 33 0;
 #X connect 2 0 34 0;
 #X connect 5 0 24 2;

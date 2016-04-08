@@ -1,4 +1,4 @@
-#N canvas 1922 51 1916 1027 10;
+#N canvas 0 30 1351 708 10;
 #X obj 170 120 test_abs;
 #X obj 171 166 print;
 #X msg 423 65 pluginName: Abstraction Test;
@@ -6,6 +6,8 @@
 ;
 #X obj 169 145 change;
 #X obj 168 85 r \$1-lv2-test range: 0 0 1;
+#X msg 422 109 pluginMaintainer: xnor;
+#X text 114 31 just a test to make sure that abstractions work;
 #X connect 0 0 4 0;
 #X connect 4 0 1 0;
 #X connect 5 0 0 0;

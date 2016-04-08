@@ -1,4 +1,4 @@
-#N canvas 1922 51 1916 1027 10;
+#N canvas 0 30 1351 708 10;
 #X msg 3 47 pluginMaintainer: xnor;
 #X obj 95 339 outlet~ group:Out:StereoGroup:right;
 #X obj 58 366 outlet~ group:Out:StereoGroup:left;
@@ -36,6 +36,8 @@
 #X connect 7 0 0 0;
 #X connect 8 0 5 0;
 #X restore 83 205 pd triangle;
+#X text 350 19 this plugin takes a mono input and pans it between the
+left and right output at a rate defined by the 'Period' input.;
 #X connect 4 0 16 0;
 #X connect 5 0 17 0;
 #X connect 6 0 7 0;
