@@ -128,6 +128,7 @@ TODO
 ----
 
 * check out/use? https://github.com/lvtk/lvtk
+* check out GUI support in this fork: https://github.com/kmatheussen/libpd
 * support externals
 * ditch temp file plugin loading when libpd has real multi-instance support
 * consolidate libpd calls into a class and preload function pointers
