@@ -85,9 +85,9 @@ correctly.;
 #X obj 105 521 r \$1-lv2-amp label:Amplitude range: 0 0.2 1;
 #X obj 107 583 r \$1-lv2-smooth label:Smoothing range: 0.5 20 1000
 ;
-#X obj 108 635 r \$1-lv2-vib-freq label:Vibrato-Freq range: 0 20 100
+#X obj 108 635 r \$1-lv2-vib_freq label:Vibrato-Freq range: 0 20 100
 ;
-#X obj 108 698 r \$1-lv2-vib-depth label:Vibrato-Depth range: 0 20
+#X obj 108 698 r \$1-lv2-vib_depth label:Vibrato-Depth range: 0 20
 100;
 #X connect 0 0 37 0;
 #X connect 1 0 2 0;
