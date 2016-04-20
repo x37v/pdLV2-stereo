@@ -6,7 +6,7 @@ BUILD_DIRS = $(addsuffix .lv2, $(addprefix $(BUILD_DIR)/pdlv2-, $(notdir $(SOURC
 HEADERS = $(addsuffix /plugin.h, $(BUILD_DIRS))
 PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
-LDFLAGS = -lpd -L/usr/local/lib `pkg-config --libs lv2-plugin` -ldl
+LDFLAGS = -L/usr/local/lib `pkg-config --libs lv2-plugin` -ldl
 CXXFLAGS = -g -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 `pkg-config --cflags lv2-plugin`
 
 LIBPD_FLAGS = UTIL=true EXTRA=true
