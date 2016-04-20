@@ -110,11 +110,17 @@ def consolidate_pd_lines(lines)
   out = []
   #unwrap wrapped lines
   lines.each do |l|
+    l.chomp!
     #pd lines start with # unless they're a continuation
     unless l =~ /\A#/ or out.size == 0
-      l = out.pop + l
+      #we don't need an extra space if we just have a semicolon in the next line
+      if l =~ /\A\s*;\s*\z/
+        l = out.pop + l
+      else
+        l = out.pop + " " + l
+      end
     end
-    out << l.chomp
+    out << l
   end
   return out
 end
