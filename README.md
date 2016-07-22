@@ -1,7 +1,7 @@
 pdlv2
 ====
 
-Makes simple [Pure Data (aka pd)](http://msp.ucsd.edu/software.html) patches usable as [LV2 plugins](http://lv2plug.in/) utilizing [libpd](https://github.com/libpd/libpd) and [lv2-c++-tools](http://www.nongnu.org/ll-plugins/hacking.html)
+Makes simple [Pure Data (aka pd)](http://msp.ucsd.edu/software.html) patches usable as [LV2 plugins](http://lv2plug.in/) utilizing [libpd](https://github.com/libpd/libpd) and [lvtk](https://github.com/lvtk/lvtk)
 
 It supports audio, control and midi in and out.
 
@@ -23,15 +23,18 @@ Only works on Linux as far as I know
 
 Install these:
 * [Pure Data](http://msp.ucsd.edu/software.html) can use package manager
-* [libpd](https://github.com/libpd/libpd)
-  * included as a submodule so just run the following then the make process should work
-  * _git submodule init_
-  * _git submodule update_
-  * then do the same in the _libpd_ directory
-* [lv2-c++-tools](http://www.nongnu.org/ll-plugins/hacking.html) can use package manager
 * [ruby](https://www.ruby-lang.org) use package manager or rvm
 * [bundler](http://bundler.io/) gem or package manager
   * run: **bundle install** from the top project directory
+
+Install submodules:
+* list of submodules:
+	* [libpd](https://github.com/libpd/libpd)
+	* [lvtk](https://github.com/lvtk/lvtk)
+* install process:
+	* _git submodule init_
+	* _git submodule update_
+	* then do the same in the _libpd_ directory
 
 You'll also need a c++ compiler and **make**
 * install **build-essential** on debian based systems
@@ -127,7 +130,6 @@ Debugging, dev
 TODO
 ----
 
-* check out/use? https://github.com/lvtk/lvtk
 * check out GUI support in this fork: https://github.com/kmatheussen/libpd
 * support externals
 * ditch temp file plugin loading when libpd has real multi-instance support
