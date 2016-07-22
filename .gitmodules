@@ -1,3 +1,6 @@
 [submodule "libpd"]
 	path = libpd
 	url = https://github.com/libpd/libpd.git
+[submodule "lvtk"]
+	path = lvtk
+	url = https://github.com/lvtk/lvtk
