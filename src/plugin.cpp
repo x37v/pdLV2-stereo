@@ -4,7 +4,7 @@
  * Lars Luthman http://www.nongnu.org/ll-plugins/lv2pftci/
  */
 
-#include <lv2plugin.hpp>
+#include <lvtk/plugin.hpp>
 #include <iostream>
 #include <libpd/z_libpd.h>
 #include <atomic>
@@ -18,7 +18,6 @@
 #include <lv2/lv2plug.in/ns/ext/midi/midi.h>
 
 #include "plugin.h"
-#include "uridmixin.hpp"
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -27,7 +26,6 @@
 
 #define CHAN_MASK 0x07
 
-using namespace LV2;
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -104,10 +102,10 @@ namespace {
 }
 
 class PDLv2Plugin :
-  public Plugin<PDLv2Plugin, LV2::URID<true>>
+  public lvtk::Plugin<PDLv2Plugin, lvtk::URID<true>>
 {
   public:
-    PDLv2Plugin(double rate) : Plugin<PDLv2Plugin, LV2::URID<true>>(pdlv2::ports.size()) {
+    PDLv2Plugin(double rate) : lvtk::Plugin<PDLv2Plugin, lvtk::URID<true>>(pdlv2::ports.size()) {
       const std::string plugin_bundle_path(bundle_path());
       std::string so_path = plugin_bundle_path + "/libpd.so";
       mLIBPDUniquePath = std::string(std::tmpnam(nullptr)) + "-libpd.so";
@@ -173,7 +171,7 @@ class PDLv2Plugin :
             break;
           case pdlv2::MIDI_OUT:
             mMIDIOut[i] = midi_out_data_t();
-            lv2_atom_forge_init(&mMIDIOut[i].forge, urid_map_handle());
+            lv2_atom_forge_init(&mMIDIOut[i].forge, get_urid_map());
             break;
           case pdlv2::MIDI_IN:
             mMIDIIn[i] = info.name;
@@ -262,7 +260,7 @@ class PDLv2Plugin :
     }
 
     void activate() {
-      mIds.midi_event = map_uri(LV2_MIDI__MidiEvent);
+      mIds.midi_event = map(LV2_MIDI__MidiEvent);
 
       call_pd<int, int>(mLIBPDHandle, "libpd_start_message", 1);  // begin of message
       call_pd_ret_void<float>(mLIBPDHandle, "libpd_add_float", 1.0f);  // message contains now "1"
