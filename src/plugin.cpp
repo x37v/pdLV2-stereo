@@ -5,17 +5,15 @@
  */
 
 #include <lvtk/plugin.hpp>
+#include <lvtk/ext/atom.hpp>
+#include <lvtk/ext/midi.hpp>
+
 #include <iostream>
 #include <libpd/z_libpd.h>
 #include <atomic>
 #include <functional>
 #include <fstream>
 #include <cstdio>
-
-#include <lv2/lv2plug.in/ns/ext/atom/atom.h>
-#include <lv2/lv2plug.in/ns/ext/atom/forge.h>
-#include <lv2/lv2plug.in/ns/ext/atom/util.h>
-#include <lv2/lv2plug.in/ns/ext/midi/midi.h>
 
 #include "plugin.h"
 
@@ -170,8 +168,7 @@ class PDLv2Plugin :
             call_pd<void*, const char *>(mLIBPDHandle, "libpd_bind", mControlOut[i].c_str());
             break;
           case pdlv2::MIDI_OUT:
-            mMIDIOut[i] = midi_out_data_t();
-            lv2_atom_forge_init(&mMIDIOut[i].forge, get_urid_map());
+            mMIDIOut[i] = midi_out_data_t(get_urid_map());
             break;
           case pdlv2::MIDI_IN:
             mMIDIIn[i] = info.name;
@@ -196,10 +193,12 @@ class PDLv2Plugin :
         LV2_Atom_Sequence* midibuf = p<LV2_Atom_Sequence>(kv.first);
         uint32_t capacity = midibuf->atom.size;
 
-        lv2_atom_forge_frame_time(&kv.second.forge, mFrameTime);
-        lv2_atom_forge_atom(&kv.second.forge, SIZE, mIds.midi_event);
-        lv2_atom_forge_raw(&kv.second.forge, &midi_bytes.front(), SIZE);
-        lv2_atom_forge_pad(&kv.second.forge, SIZE);
+        lvtk::AtomForge& f = kv.second.forge;
+
+        f.frame_time(mFrameTime);
+        f.write_atom(SIZE, mIds.midi_event);
+        f.write_raw(&midi_bytes.front(), SIZE);
+        lv2_atom_forge_pad(kv.second.forge.cobj(), SIZE);
       }
     }
 
@@ -309,14 +308,15 @@ class PDLv2Plugin :
         LV2_Atom_Sequence* midibuf = p<LV2_Atom_Sequence>(kv.first);
         uint32_t capacity = midibuf->atom.size;
 
-        lv2_atom_forge_set_buffer(&kv.second.forge, (uint8_t *)midibuf, capacity);
-        lv2_atom_forge_sequence_head(&kv.second.forge, &kv.second.frame, 0);
+        lvtk::AtomForge& f = kv.second.forge;
+        f.set_buffer((uint8_t*)midibuf, capacity);
+        f.sequence_head(kv.second.frame, 0);
       }
     }
 
     void complete_midi_out() {
       for (auto& kv: mMIDIOut) {
-        lv2_atom_forge_pop(&kv.second.forge, &kv.second.frame);
+        kv.second.forge.pop(kv.second.frame);
       }
     }
 
@@ -388,9 +388,12 @@ class PDLv2Plugin :
     }
 
     struct midi_out_data_t {
-      LV2_Atom_Forge_Frame frame;
-      LV2_Atom_Forge forge;
+      lvtk::ForgeFrame frame;
+      lvtk::AtomForge forge;
+      midi_out_data_t(LV2_URID_Map* map) : forge(map) { }
+      midi_out_data_t() { }
     };
+
     //time within the current processing frame.. used for event offsets
     int64_t mFrameTime = 0;
     std::map<uint32_t, std::string> mControlIn;

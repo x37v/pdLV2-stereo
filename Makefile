@@ -38,8 +38,8 @@ install: $(PLUGINS)
 
 test: install
 	#jalv.gtk http://x37v.info/pdlv2/templateplugin.html
-	jalv.gtk http://x37v.info/pdlv2/djfilter.html
-	#jalv.gtk http://x37v.info/pdlv2/mididemoplugin.html
+	#jalv.gtk http://x37v.info/pdlv2/djfilter.html
+	jalv.gtk http://x37v.info/pdlv2/mididemoplugin.html
 
 clean:
 	rm -rf build
