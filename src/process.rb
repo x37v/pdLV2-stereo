@@ -40,7 +40,7 @@ DEFAULT_LICENSE = 'http://usefulinc.com/doap/licenses/gpl'
 @audioInRegex = /#{@objRegex}inlet~\s*(.*?);\s*/
 @audioOutRegex = /#{@objRegex}outlet~\s*(.*?);\s*/
 
-@labelRegex = /label:\s*([\w-]*)/
+@labelRegex = /label:\s*([\w\-_]*)/
 @groupRegex = /group:\s*([\w:-]*)/
 @groupFormatRegex = /\A([\w-]*):([\w]*):([\w]*)\z/
 @floatRegex = /-?\d+(?:\.\d+)?/
@@ -70,7 +70,11 @@ PD_MIDI_OBJ = {
 
 def get_control_data(content)
   data = {}
-  data[:symbol] = content.match(/\A(\w+)/)[0]
+  #match anything and then check the format
+  data[:symbol] = content.match(/\A([^\s]*)/)[0]
+  if data[:symbol] !~ /\A[_a-zA-Z][_a-zA-Z0-9]*\z/
+    raise "symbol format #{data[:symbol]} not supported, must be /[_a-zA-Z][_a-zA-Z0-9]*/"
+  end
   data[:label] =
     if content =~ @labelRegex
       $1
@@ -88,8 +92,7 @@ def get_audio_data(x, y, content)
   data = {:x => x.to_i}
   if content =~ @groupRegex
     g = $1
-    if g =~ @groupFormatRegex
-    else
+    unless g =~ @groupFormatRegex
       raise "#{g} not a valid group format: name:GroupClass:role"
     end
     data[:group] = {:name => $1, :type => $2, :member => $3}
@@ -107,11 +110,17 @@ def consolidate_pd_lines(lines)
   out = []
   #unwrap wrapped lines
   lines.each do |l|
+    l.chomp!
     #pd lines start with # unless they're a continuation
     unless l =~ /\A#/ or out.size == 0
-      l = out.pop + l
+      #we don't need an extra space if we just have a semicolon in the next line
+      if l =~ /\A\s*;\s*\z/
+        l = out.pop + l
+      else
+        l = out.pop + " " + l
+      end
     end
-    out << l.chomp
+    out << l
   end
   return out
 end

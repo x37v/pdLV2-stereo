@@ -7,7 +7,7 @@ HEADERS = $(addsuffix /plugin.h, $(BUILD_DIRS))
 PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
 LVTKLIB = lvtk/build/src/liblvtk_plugin2.a
-LDFLAGS = -lpd -L/usr/local/lib -ldl ${LVTKLIB}
+LDFLAGS = -L/usr/local/lib -ldl ${LVTKLIB}
 CXXFLAGS = -g -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 -Ilvtk/
 
 LIBPD_FLAGS = UTIL=true EXTRA=true
