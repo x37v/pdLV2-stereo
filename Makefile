@@ -7,8 +7,8 @@ HEADERS = $(addsuffix /plugin.h, $(BUILD_DIRS))
 PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
 LVTKLIB = lvtk/build/src/liblvtk_plugin2.a
-LDFLAGS = -L/usr/local/lib -ldl ${LVTKLIB}
-CXXFLAGS = -g -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 -Ilvtk/
+LDFLAGS += -L/usr/local/lib -ldl ${LVTKLIB}
+CXXFLAGS += -g -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 -Ilvtk/
 
 LIBPD_FLAGS = UTIL=true EXTRA=true
 LIBPD_SO = libpd/libs/libpd.so
@@ -38,8 +38,9 @@ install: $(PLUGINS)
 
 test: install
 	#jalv.gtk http://x37v.info/pdlv2/templateplugin.html
-	#jalv.gtk http://x37v.info/pdlv2/djfilter.html
-	jalv.gtk http://x37v.info/pdlv2/mididemoplugin.html
+	jalv.gtk http://x37v.info/pdlv2/djfilter.html
+	#jalv.gtk http://x37v.info/pdlv2/mididemoplugin.html
 
 clean:
 	rm -rf build
+	cd libpd/ && make clobber
