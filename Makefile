@@ -7,11 +7,13 @@ HEADERS = $(addsuffix /plugin.h, $(BUILD_DIRS))
 PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
 LVTKLIB = lvtk/build/src/liblvtk_plugin2.a
-LDFLAGS += -L/usr/local/lib -ldl ${LVTKLIB}
-CXXFLAGS += -g -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 -Ilvtk/
+LDFLAGS += -ldl ${LVTKLIB}
+CXXFLAGS += -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 -Ilvtk/
 
 LIBPD_FLAGS = UTIL=true EXTRA=true
 LIBPD_SO = libpd/libs/libpd.so
+
+RUBY = ruby
 
 #make the headers stick around so we can inspect them
 #delete this line if you don't want them in your output directories
@@ -23,7 +25,7 @@ $(BUILD_DIR)/pdlv2-%.lv2/pdlv2.so: $(BUILD_DIR)/pdlv2-%.lv2/plugin.h src/plugin.
 	$(CXX) $(CXXFLAGS) src/plugin.cpp -I$(dir $<) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb src/host.pd $(LIBPD_SO)
-	ruby src/process.rb $< $(dir $@)
+	$(RUBY) src/process.rb $< $(dir $@)
 	cp -r $(LIBPD_SO) $(dir $<)/* $(dir $@)
 
 $(LVTKLIB):
