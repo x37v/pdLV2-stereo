@@ -9,18 +9,13 @@
 #include <lvtk/ext/midi.hpp>
 
 #include <iostream>
-#include <libpd/z_libpd.h>
+#include "z_libpd.h"
 #include <atomic>
 #include <functional>
 #include <fstream>
 #include <cstdio>
 
 #include "plugin.h"
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-#include <dlfcn.h>
 
 #define CHAN_MASK 0x07
 
@@ -95,6 +90,11 @@ class PDLv2Plugin :
       pd_setinstance(mPDInstance);
       libpd_init_audio(mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
 
+      // compute audio    [; pd dsp 1(
+      libpd_start_message(1); // one entry in list
+      libpd_add_float(1.0f);
+      libpd_finish_message("pd", "dsp");
+
       libpd_set_floathook(&pd_floathook);
       libpd_set_noteonhook(&pd_noteonhook);
       libpd_set_controlchangehook(&pd_controlchangehook);
@@ -106,10 +106,6 @@ class PDLv2Plugin :
       mPatchFileHandle = libpd_openfile(pdlv2::patch_file_name, plugin_bundle_path.c_str());
       mPDDollarZero = libpd_getdollarzero(mPatchFileHandle); // get dollarzero from patch
       mPDBlockSize = libpd_blocksize();
-
-      libpd_start_message(1); // one entry in list
-      libpd_add_float(1.0f);
-      libpd_finish_message("pd", "dsp");
 
       for (size_t i = 0; i < pdlv2::ports.size(); i++) {
         pdlv2::PortInfo info = pdlv2::ports.at(i);
