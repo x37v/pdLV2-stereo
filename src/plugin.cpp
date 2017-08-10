@@ -31,51 +31,6 @@ namespace sp = std::placeholders;
 
 class PDLv2Plugin;
 namespace {
-
-  void copy_file(std::string from, std::string to) {
-    std::ifstream source(from, std::ios::binary);
-    std::ofstream dest(to, std::ios::binary);
-
-    dest << source.rdbuf();
-
-    source.close();
-    dest.close();
-  }
-
-
-  template<typename R, typename ...Args>
-    R call_pd(void * library_handle, std::string func_name, Args ...args) {
-      R (*ptr)(Args...);
-      ptr = (R (*)(Args...))dlsym(library_handle, func_name.c_str());
-      if (!ptr) {
-        cerr << "couldn't get function " << func_name << endl;
-        return R();
-      }
-      return (*ptr)(std::forward<Args>(args)...);
-    }
-
-  template<typename R>
-    R call_pd_void(void * library_handle, std::string func_name) {
-      R (*ptr)(void);
-      ptr = (R (*)(void))dlsym(library_handle, func_name.c_str());
-      if (!ptr) {
-        cerr << "couldn't get function " << func_name << endl;
-        return R();
-      }
-      return (*ptr)();
-    }
-
-  template<typename ...Args>
-    void call_pd_ret_void(void * library_handle, std::string func_name, Args ...args) {
-      void (*ptr)(Args...);
-      ptr = (void (*)(Args...))dlsym(library_handle, func_name.c_str());
-      if (!ptr) {
-        cerr << "couldn't get function " << func_name << endl;
-        return;
-      }
-      (*ptr)(std::forward<Args>(args)...);
-    }
-
   PDLv2Plugin * current_plugin = nullptr;
 
   std::atomic_flag pd_global_lock = ATOMIC_FLAG_INIT;
@@ -105,17 +60,10 @@ class PDLv2Plugin :
   public:
     PDLv2Plugin(double rate) : lvtk::Plugin<PDLv2Plugin, lvtk::URID<true>>(pdlv2::ports.size()) {
       const std::string plugin_bundle_path(bundle_path());
-      std::string so_path = plugin_bundle_path + "/libpd.so";
-      mLIBPDUniquePath = std::string(std::tmpnam(nullptr)) + "-libpd.so";
 
-      copy_file(so_path, mLIBPDUniquePath);
-      //XXX what flags do we need now since we have our own unique plugin?
-      mLIBPDHandle = dlopen(mLIBPDUniquePath.c_str(), RTLD_NOW | RTLD_DEEPBIND | RTLD_LOCAL);
-      if (mLIBPDHandle == NULL) {
-        cerr << "cannot load libpd library" << endl;
-        set_ok(false);
-        return;
-      }
+      libpd_set_printhook((t_libpd_printhook)pdprint);
+      
+      mPDInstance = pdinstance_new();
 
       for (size_t i = 0; i < pdlv2::ports.size(); i++) {
         pdlv2::PortInfo info = pdlv2::ports.at(i);
@@ -132,27 +80,36 @@ class PDLv2Plugin :
         }
       }
 
-      call_pd_ret_void<t_libpd_printhook>(mLIBPDHandle, "libpd_set_printhook", (t_libpd_printhook)pdprint);
 
-      if (call_pd<int, const char *>(mLIBPDHandle, "libpd_exists", "PDLV2-TEST") != 0) {
+#if 0
+      if (libpd_exists("PDLV2-TEST") != 0) {
         cout << plugin_bundle_path << " EXISTS" << endl;
       } else {
-        call_pd_void<int>(mLIBPDHandle, "libpd_init");
-        call_pd<void*, const char *>(mLIBPDHandle, "libpd_bind", "PDLV2-TEST");
-        call_pd<int, int, int, int>(mLIBPDHandle, "libpd_init_audio", mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
+        libpd_init();
+        libpd_bind("PDLV2-TEST");
       }
+#else
+      libpd_init();
+#endif
 
-      call_pd_ret_void<const t_libpd_floathook>(mLIBPDHandle, "libpd_set_floathook", &pd_floathook);
-      call_pd_ret_void<const t_libpd_noteonhook>(mLIBPDHandle, "libpd_set_noteonhook", &pd_noteonhook);
-      call_pd_ret_void<const t_libpd_controlchangehook>(mLIBPDHandle, "libpd_set_controlchangehook", &pd_controlchangehook);
-      call_pd_ret_void<const t_libpd_programchangehook>(mLIBPDHandle, "libpd_set_programchangehook", &pd_programchangehook);
-      call_pd_ret_void<const t_libpd_pitchbendhook>(mLIBPDHandle, "libpd_set_pitchbendhook", &pd_pitchbendhook);
-      call_pd_ret_void<const t_libpd_aftertouchhook>(mLIBPDHandle, "libpd_set_aftertouchhook", &pd_aftertouchhook);
-      call_pd_ret_void<const t_libpd_polyaftertouchhook>(mLIBPDHandle, "libpd_set_polyaftertouchhook", &pd_polyaftertouchhook);
+      pd_setinstance(mPDInstance);
+      libpd_init_audio(mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
 
-      mPatchFileHandle = call_pd<void *, const char *, const char *>(mLIBPDHandle, "libpd_openfile", pdlv2::patch_file_name, plugin_bundle_path.c_str());
-      mPDDollarZero = call_pd<int, void *>(mLIBPDHandle, "libpd_getdollarzero", mPatchFileHandle); // get dollarzero from patch
-      mPDBlockSize = call_pd_void<int>(mLIBPDHandle, "libpd_blocksize");
+      libpd_set_floathook(&pd_floathook);
+      libpd_set_noteonhook(&pd_noteonhook);
+      libpd_set_controlchangehook(&pd_controlchangehook);
+      libpd_set_programchangehook(&pd_programchangehook);
+      libpd_set_pitchbendhook(&pd_pitchbendhook);
+      libpd_set_aftertouchhook(&pd_aftertouchhook);
+      libpd_set_polyaftertouchhook(&pd_polyaftertouchhook);
+
+      mPatchFileHandle = libpd_openfile(pdlv2::patch_file_name, plugin_bundle_path.c_str());
+      mPDDollarZero = libpd_getdollarzero(mPatchFileHandle); // get dollarzero from patch
+      mPDBlockSize = libpd_blocksize();
+
+      libpd_start_message(1); // one entry in list
+      libpd_add_float(1.0f);
+      libpd_finish_message("pd", "dsp");
 
       for (size_t i = 0; i < pdlv2::ports.size(); i++) {
         pdlv2::PortInfo info = pdlv2::ports.at(i);
@@ -165,7 +122,7 @@ class PDLv2Plugin :
             break;
           case pdlv2::CONTROL_OUT:
             mControlOut[i] = std::to_string(mPDDollarZero) + "-lv2-" + info.name;
-            call_pd<void*, const char *>(mLIBPDHandle, "libpd_bind", mControlOut[i].c_str());
+            libpd_bind(mControlOut[i].c_str());
             break;
           case pdlv2::MIDI_OUT:
             mMIDIOut[i] = midi_out_data_t(get_urid_map());
@@ -178,13 +135,11 @@ class PDLv2Plugin :
 
       mPDInputBuffer.resize(mPDBlockSize * mAudioIn.size());
       mPDOutputBuffer.resize(mPDBlockSize * mAudioOut.size());
-
     }
 
     virtual ~PDLv2Plugin() {
-      call_pd_ret_void<void *>(mLIBPDHandle, "libpd_closefile", mPatchFileHandle);
-      dlclose(mLIBPDHandle);
-      std::remove(mLIBPDUniquePath.c_str());
+      libpd_closefile(mPatchFileHandle);
+      pdinstance_free(mPDInstance);
     }
 
     template<std::size_t SIZE>
@@ -260,21 +215,18 @@ class PDLv2Plugin :
 
     void activate() {
       mIds.midi_event = map(LV2_MIDI__MidiEvent);
-
-      call_pd<int, int>(mLIBPDHandle, "libpd_start_message", 1);  // begin of message
-      call_pd_ret_void<float>(mLIBPDHandle, "libpd_add_float", 1.0f);  // message contains now "1"
-      call_pd<int, const char *, const char *>(mLIBPDHandle, "libpd_finish_message", "pd", "dsp"); // message is sent to receiver "pd", prepended by the string "dsp"
     }
 
     void run(uint32_t nframes) {
       mFrameTime = 0;
       with_lock([this, nframes] () {
+        pd_setinstance(mPDInstance);
         current_plugin = this; //for floathook
         setup_midi_out();
         for (auto& kv: mControlIn) {
           std::string ctrl_name = kv.second;
           float value = *p(kv.first);
-          call_pd<int, const char *, float>(mLIBPDHandle, "libpd_float", ctrl_name.c_str(), value);
+          libpd_float(ctrl_name.c_str(), value);
         }
 
         for (auto& kv: mMIDIIn) {
@@ -292,7 +244,7 @@ class PDLv2Plugin :
             memcpy(in_buf + c * mPDBlockSize, p(mAudioIn[c]) + i, mPDBlockSize * sizeof(float));
 
           memset(out_buf, 0, mPDOutputBuffer.size() * sizeof(float));
-          call_pd<int, const float *, const float *>(mLIBPDHandle, "libpd_process_raw", in_buf, out_buf);
+          libpd_process_raw(in_buf, out_buf);
 
           for (uint32_t c = 0; c < mAudioOut.size(); c++)
             memcpy(p(mAudioOut[c]) + i, out_buf + c * mPDBlockSize, mPDBlockSize * sizeof(float));
@@ -326,40 +278,33 @@ class PDLv2Plugin :
           //the actual data is stored after the event
           const uint8_t* const msg = (const uint8_t*)(ev + 1);
           for (uint32_t i = 0; i < ev->body.size; i++) {
-            call_pd<int, int, int>(mLIBPDHandle, "libpd_midibyte", 0, static_cast<int>(msg[i]));
+            libpd_midibyte(0, static_cast<int>(msg[i]));
           }
           switch (lv2_midi_message_type(msg)) {
             case LV2_MIDI_MSG_INVALID:
               break;
             case LV2_MIDI_MSG_NOTE_OFF:
-              call_pd<int, int, int, int>(mLIBPDHandle,
-                  "libpd_noteon", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), 0);
+              libpd_noteon(static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), 0);
               break;
             case LV2_MIDI_MSG_NOTE_ON:
-              call_pd<int, int, int, int>(mLIBPDHandle,
-                  "libpd_noteon", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), static_cast<int>(msg[2]));
+              libpd_noteon(static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), static_cast<int>(msg[2]));
               break;
             case LV2_MIDI_MSG_NOTE_PRESSURE:
-              call_pd<int, int, int, int>(mLIBPDHandle,
-                  "libpd_polyaftertouch", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), static_cast<int>(msg[2]));
+              libpd_polyaftertouch(static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), static_cast<int>(msg[2]));
               break;
             case LV2_MIDI_MSG_CONTROLLER:
-              call_pd<int, int, int, int>(mLIBPDHandle,
-                  "libpd_controlchange", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), static_cast<int>(msg[2]));
+              libpd_controlchange(static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]), static_cast<int>(msg[2]));
               break;
             case LV2_MIDI_MSG_PGM_CHANGE:
-              call_pd<int, int, int>(mLIBPDHandle,
-                  "libpd_programchange", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]));
+              libpd_programchange(static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]));
               break;
             case LV2_MIDI_MSG_CHANNEL_PRESSURE:
-              call_pd<int, int, int>(mLIBPDHandle,
-                  "libpd_aftertouch", static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]));
+              libpd_aftertouch(static_cast<int>(CHAN_MASK & msg[0]), static_cast<int>(msg[1]));
               break;
             case LV2_MIDI_MSG_BENDER:
               {
                 int value = ((static_cast<uint16_t>(msg[2]) << 7) | msg[1]) - 8192;
-                call_pd<int, int, int>(mLIBPDHandle,
-                    "libpd_pitchbend", static_cast<int>(CHAN_MASK & msg[0]), value);
+                libpd_pitchbend(static_cast<int>(CHAN_MASK & msg[0]), value);
               }
               break;
             case LV2_MIDI_MSG_SYSTEM_EXCLUSIVE:
@@ -379,8 +324,7 @@ class PDLv2Plugin :
             case LV2_MIDI_MSG_STOP:
             case LV2_MIDI_MSG_ACTIVE_SENSE:
             case LV2_MIDI_MSG_RESET:
-              call_pd<int, int, int>(mLIBPDHandle,
-                  "libpd_sysrealtime", 0, static_cast<int>(msg[0]));
+              libpd_sysrealtime(0, static_cast<int>(msg[0]));
               break;
           }
         }
@@ -406,8 +350,7 @@ class PDLv2Plugin :
     size_t mPDBlockSize = 64;
     std::vector<float> mPDInputBuffer;
     std::vector<float> mPDOutputBuffer;
-    void * mLIBPDHandle = nullptr;
-    std::string mLIBPDUniquePath;
+    t_pdinstance * mPDInstance;
     void * mPatchFileHandle = nullptr;
 
     struct mapped_ids {

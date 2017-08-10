@@ -8,9 +8,9 @@ PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
 LVTKLIB = lvtk/build/src/liblvtk_plugin2.a
 LDFLAGS += -ldl ${LVTKLIB}
-CXXFLAGS += -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 -Ilvtk/
+CXXFLAGS += -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 -Ilvtk/ -DPDINSTANCE
 
-LIBPD_FLAGS = UTIL=true EXTRA=true
+LIBPD_FLAGS = UTIL=true EXTRA=true ADDITIONAL_CFLAGS=-DPDINSTANCE
 LIBPD_SO = libpd/libs/libpd.so
 
 RUBY = ruby
@@ -21,12 +21,12 @@ RUBY = ruby
 
 all: $(PLUGINS)
 
-$(BUILD_DIR)/pdlv2-%.lv2/pdlv2.so: $(BUILD_DIR)/pdlv2-%.lv2/plugin.h src/plugin.cpp $(LVTKLIB)
-	$(CXX) $(CXXFLAGS) src/plugin.cpp -I$(dir $<) -o $@ $(LDFLAGS)
+$(BUILD_DIR)/pdlv2-%.lv2/pdlv2.so: $(BUILD_DIR)/pdlv2-%.lv2/plugin.h src/plugin.cpp $(LVTKLIB) $(LIBPD_SO)
+	$(CXX) $(CXXFLAGS) $(LIBPD_SO) src/plugin.cpp -I$(dir $<) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/pdlv2-%.lv2/plugin.h: plugins/%/plugin.pd src/process.rb src/host.pd $(LIBPD_SO)
 	$(RUBY) src/process.rb $< $(dir $@)
-	cp -r $(LIBPD_SO) $(dir $<)/* $(dir $@)
+	cp $(dir $<)plugin.pd $(dir $@)
 
 $(LVTKLIB):
 	cd lvtk/ && ./waf configure && ./waf
@@ -39,8 +39,8 @@ install: $(PLUGINS)
 	cp -r $(BUILD_DIR)/* $(INSTALL_DIR)
 
 test: install
-	#jalv.gtk http://x37v.info/pdlv2/templateplugin.html
-	jalv.gtk http://x37v.info/pdlv2/djfilter.html
+	jalv.gtk http://x37v.info/pdlv2/templateplugin.html
+	#jalv.gtk http://x37v.info/pdlv2/djfilter.html
 	#jalv.gtk http://x37v.info/pdlv2/mididemoplugin.html
 
 clean:
