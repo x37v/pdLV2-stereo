@@ -59,7 +59,7 @@ class PDLv2Plugin :
 
       libpd_set_printhook((t_libpd_printhook)pdprint);
       
-      mPDInstance = pdinstance_new();
+      //mPDInstance = pdinstance_new();
 
       for (size_t i = 0; i < pdlv2::ports.size(); i++) {
         pdlv2::PortInfo info = pdlv2::ports.at(i);
@@ -88,7 +88,7 @@ class PDLv2Plugin :
       libpd_init();
 #endif
 
-      pd_setinstance(mPDInstance);
+     // pd_setinstance(mPDInstance);
       libpd_init_audio(mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
 
       // compute audio    [; pd dsp 1(
@@ -136,7 +136,7 @@ class PDLv2Plugin :
 
     virtual ~PDLv2Plugin() {
       libpd_closefile(mPatchFileHandle);
-      pdinstance_free(mPDInstance);
+     // pdinstance_free(mPDInstance);
     }
 
     template<std::size_t SIZE>
@@ -217,7 +217,7 @@ class PDLv2Plugin :
     void run(uint32_t nframes) {
       mFrameTime = 0;
       with_lock([this, nframes] () {
-        pd_setinstance(mPDInstance);
+        //pd_setinstance(mPDInstance);
         current_plugin = this; //for floathook
         setup_midi_out();
         for (auto& kv: mControlIn) {

@@ -8,10 +8,11 @@ PLUGINS = $(addsuffix /pdlv2.so, $(BUILD_DIRS))
 
 LVTKLIB = lvtk/build/src/liblvtk_plugin2.a
 LDFLAGS += -ldl ${LVTKLIB}
-CXXFLAGS += -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 -Ilvtk/ -Ilibpd/pure-data/src/ -Ilibpd/libpd_wrapper/ -DPDINSTANCE 
+CXXFLAGS += -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 -Ilvtk/ -Ilibpd/pure-data/src/ -Ilibpd/libpd_wrapper/
+#CXXFLAGS += -Wl,--no-as-needed -Wno-narrowing -shared -fPIC -DPIC -Isrc/ -std=c++11 -Ilvtk/ -Ilibpd/pure-data/src/ -Ilibpd/libpd_wrapper/ -DPDINSTANCE 
 
 #LIBPD_FLAGS = UTIL=true EXTRA=true ADDITIONAL_CFLAGS=-DPDINSTANCE
-LIBPD_FLAGS = ADDITIONAL_CFLAGS=-DPDINSTANCE
+#LIBPD_FLAGS = ADDITIONAL_CFLAGS=-DPDINSTANCE
 LIBPD_SO = libpd/libs/libpd.so
 
 RUBY = ruby
