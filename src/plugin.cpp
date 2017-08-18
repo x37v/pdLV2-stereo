@@ -28,6 +28,7 @@ namespace sp = std::placeholders;
 class PDLv2Plugin;
 namespace {
   PDLv2Plugin * current_plugin = nullptr;
+  bool has_initialized = false;
 
   std::atomic_flag pd_global_lock = ATOMIC_FLAG_INIT;
 
@@ -76,7 +77,10 @@ class PDLv2Plugin :
         libpd_bind("PDLV2-TEST");
       }
 #else
-      libpd_init();
+      if (!has_initialized) {
+        libpd_init();
+        has_initialized = true;
+      }
 #endif
 
       mPDInstance = pdinstance_new();
