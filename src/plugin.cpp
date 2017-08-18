@@ -80,6 +80,8 @@ class PDLv2Plugin :
       if (!has_initialized) {
         libpd_init();
         has_initialized = true;
+      } else {
+        cout << plugin_bundle_path << " EXISTS" << endl;
       }
 #endif
 
