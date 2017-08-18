@@ -42,12 +42,6 @@ namespace {
   void pd_pitchbendhook(int channel, int value);
   void pd_aftertouchhook(int channel, int value);
   void pd_polyaftertouchhook(int channel, int pitch, int value);
-
-  void with_lock(std::function<void()> func) {
-    while (pd_global_lock.test_and_set(std::memory_order_acquire));  // spin, acquire lock
-    func();
-    pd_global_lock.clear(std::memory_order_release); // release lock
-  }
 }
 
 class PDLv2Plugin :
@@ -216,7 +210,8 @@ class PDLv2Plugin :
 
     void run(uint32_t nframes) {
       mFrameTime = 0;
-      with_lock([this, nframes] () {
+      {
+        while (pd_global_lock.test_and_set(std::memory_order_acquire));  // spin, acquire lock
         pd_setinstance(mPDInstance);
         current_plugin = this; //for floathook
         setup_midi_out();
@@ -249,7 +244,8 @@ class PDLv2Plugin :
         }
         complete_midi_out();
         current_plugin = nullptr;
-      });
+        pd_global_lock.clear(std::memory_order_release); // release lock
+      };
     }
 
     void setup_midi_out() {
