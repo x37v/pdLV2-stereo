@@ -53,8 +53,6 @@ class PDLv2Plugin :
 
       libpd_set_printhook((t_libpd_printhook)pdprint);
       
-      mPDInstance = pdinstance_new();
-
       for (size_t i = 0; i < pdlv2::ports.size(); i++) {
         pdlv2::PortInfo info = pdlv2::ports.at(i);
         switch (info.type) {
@@ -70,7 +68,6 @@ class PDLv2Plugin :
         }
       }
 
-
 #if 0
       if (libpd_exists("PDLV2-TEST") != 0) {
         cout << plugin_bundle_path << " EXISTS" << endl;
@@ -81,6 +78,8 @@ class PDLv2Plugin :
 #else
       libpd_init();
 #endif
+
+      mPDInstance = pdinstance_new();
 
       pd_setinstance(mPDInstance);
       libpd_init_audio(mAudioIn.size(), mAudioOut.size(), static_cast<int>(rate)); 
