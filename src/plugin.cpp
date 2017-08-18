@@ -28,7 +28,6 @@ namespace sp = std::placeholders;
 class PDLv2Plugin;
 namespace {
   PDLv2Plugin * current_plugin = nullptr;
-  bool has_initialized = false;
 
   std::atomic_flag pd_global_lock = ATOMIC_FLAG_INIT;
 
@@ -53,6 +52,7 @@ class PDLv2Plugin :
       const std::string plugin_bundle_path(bundle_path());
 
       libpd_set_printhook((t_libpd_printhook)pdprint);
+      libpd_init();
       
       for (size_t i = 0; i < pdlv2::ports.size(); i++) {
         pdlv2::PortInfo info = pdlv2::ports.at(i);
@@ -69,21 +69,6 @@ class PDLv2Plugin :
         }
       }
 
-#if 0
-      if (libpd_exists("PDLV2-TEST") != 0) {
-        cout << plugin_bundle_path << " EXISTS" << endl;
-      } else {
-        libpd_init();
-        libpd_bind("PDLV2-TEST");
-      }
-#else
-      if (!has_initialized) {
-        libpd_init();
-        has_initialized = true;
-      } else {
-        cout << plugin_bundle_path << " EXISTS" << endl;
-      }
-#endif
 
       mPDInstance = pdinstance_new();
 
