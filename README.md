@@ -140,3 +140,9 @@ TODO
 * [plugin category](http://www.nongnu.org/ll-plugins/lv2pftci/#More_metadata)
   * [reference](http://lv2plug.in/ns/lv2core/#sec-reference)
 * support a custom GUI
+
+
+See also
+----
+
+* [Camomile](https://github.com/pierreguillot/Camomile) 'A plugin that loads and controls Pure Data patches.' Takes a different approach but is more certainly full featured than pdlv2, and can run in lv2 as well as vst etc.
